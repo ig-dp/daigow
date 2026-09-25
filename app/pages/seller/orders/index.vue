@@ -1,14 +1,11 @@
 <template>
   <main class="seller-page">
-    <section class="seller-page-inner max-w-5xl">
+    <section class="seller-page-inner">
       <h1 class="seller-page-title mb-6">Pesanan</h1>
 
       <div class="mb-4">
         <label class="field-label" for="trip-filter">Trip</label>
-        <select id="trip-filter" v-model="tripId" class="field-input mt-1 max-w-xs">
-          <option value="">Semua Trip</option>
-          <option v-for="trip in trips?.trips ?? []" :key="trip.id" :value="trip.id">{{ trip.title }}</option>
-        </select>
+        <AppSelect id="trip-filter" v-model="tripId" :options="tripOptions" placeholder="Belum ada trip" class="mt-1 max-w-xs" />
       </div>
 
       <div class="mb-6 flex flex-wrap gap-2">
@@ -45,9 +42,13 @@
 </template>
 
 <script setup lang="ts">
+import AppSelect from '~/components/ui/AppSelect.vue'
+import { tripSelectOption } from '~/composables/useTripStatus'
+import { useSelectedTrip } from '~/composables/useSelectedTrip'
 import { ORDER_STATUS } from '~/utils/seller-order-status.mjs'
 
 definePageMeta({ middleware: 'seller', layout: 'seller' })
+useHead({ title: 'Pesanan' })
 
 const STATUS_TABS = [
   { value: '', label: 'Semua' },
@@ -68,10 +69,15 @@ function statusMeta(status: string) {
   return { label: ORDER_STATUS[status as keyof typeof ORDER_STATUS]?.label ?? status, class: STATUS_CLASS[status] ?? 'bg-gray-100 text-gray-800' }
 }
 
-const tripId = ref('')
 const status = ref('')
 
 const { data: trips } = await useFetch('/api/seller/trips')
+const tripId = useSelectedTrip(computed(() => trips.value?.trips))
+// Badge = orders awaiting confirmation in that trip, capped at "99+".
+const tripOptions = computed(() => (trips.value?.trips ?? []).map((trip) => {
+  const count = trip.awaiting_confirmation_count
+  return { ...tripSelectOption(trip), badge: count > 99 ? '99+' : count > 0 ? String(count) : undefined }
+}))
 const { data: orders, pending, error } = await useFetch('/api/seller/orders', {
   query: computed(() => ({ trip_id: tripId.value || undefined, status: status.value || undefined }))
 })

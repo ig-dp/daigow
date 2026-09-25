@@ -2,7 +2,7 @@
   <main class="min-h-dvh bg-[#fafaf8] text-ink">
     <header class="sticky top-0 z-20 border-b border-border bg-white/95 backdrop-blur">
       <div class="mx-auto flex max-w-[1440px] items-center gap-5 px-5 py-3 sm:px-8 lg:px-10">
-        <NuxtLink :to="`/t/${slug}`" class="shrink-0 text-xl font-bold tracking-tight text-brand focus-visible:outline-2 focus-visible:outline-brand">DAIGOW</NuxtLink>
+        <NuxtLink :to="`/t/${slug}`" class="flex shrink-0 items-baseline gap-2 text-xl font-bold tracking-tight text-brand focus-visible:outline-2 focus-visible:outline-brand"><img src="/logo.svg" alt="" class="h-[1.5cap] w-auto translate-y-[0.25cap]">DAIGOW</NuxtLink>
         <div class="relative ml-auto hidden w-full max-w-[480px] sm:block"><span class="absolute left-4 top-1/2 -translate-y-1/2 text-muted" aria-hidden="true">⌕</span><input class="h-11 w-full rounded-lg bg-[#f0f1ee] pl-10 pr-4 text-sm outline-none placeholder:text-muted focus:ring-2 focus:ring-brand/40" placeholder="Cari produk di Trip ini..." aria-label="Cari produk" @keydown.enter="goToCatalog"></div>
         <NuxtLink :to="`/t/${slug}`" class="inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-brand hover:bg-[#f0f1ee] focus-visible:outline-2 focus-visible:outline-brand" aria-label="Kembali ke katalog">Keranjang</NuxtLink>
       </div>

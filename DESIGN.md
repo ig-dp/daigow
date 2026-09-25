@@ -12,11 +12,11 @@ colors:
   border: "#e6e6e1"
 typography:
   sans:
-    fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Google Sans Flex, ui-sans-serif, system-ui, sans-serif"
 rounded:
-  DEFAULT: "0.5rem"
-  sm: "0.375rem"
-  lg: "0.75rem"
+  DEFAULT: "0.375rem"
+  sm: "0.25rem"
+  lg: "0.5rem"
 components:
   button: {}
   table: {}

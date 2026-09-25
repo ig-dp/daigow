@@ -1,6 +1,9 @@
 <template>
   <div>
-    <label class="field-label" :for="id">{{ label }}</label>
+    <label class="field-label" :for="id">
+      {{ required ? label.trimEnd().slice(0, -1).trimEnd() : label }}
+      <span v-if="required" class="text-red-600">*</span>
+    </label>
     <input
       :id="id"
       :name="name"
@@ -18,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
   id: string
   name: string
   label: string
@@ -35,4 +38,7 @@ withDefaults(defineProps<{
 })
 
 defineEmits<{ 'update:modelValue': [value: string] }>()
+
+// Labels mark required fields with a trailing "*" (e.g. "Judul Trip *"); render it in red.
+const required = computed(() => props.label.trimEnd().endsWith('*'))
 </script>

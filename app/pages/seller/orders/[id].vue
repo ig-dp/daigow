@@ -1,9 +1,15 @@
 <template>
   <section class="seller-page">
-    <div class="seller-detail-column">
-      <NuxtLink to="/seller/orders" class="inline-flex items-center gap-2 text-sm text-muted hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
-        <span aria-hidden="true">←</span> Kembali ke Pesanan
-      </NuxtLink>
+    <div class="seller-page-inner">
+      <header class="flex flex-wrap justify-between items-center gap-3">
+        <AppPageTitle
+          :title="order?.order_number ?? 'Detail Pesanan'"
+          :subtitle="order ? `${formatDate(order.created_at)} · ${order.buyer_name}` : ''"
+          back-to="/seller/orders"
+          back-label="Kembali ke Pesanan"
+        />
+        <span v-if="order" class="px-3 py-1.5 rounded-full font-semibold text-sm" :class="statusClass(order.status)">{{ statusMeta.label }}</span>
+      </header>
 
       <div v-if="pending" class="mt-6 rounded-lg border border-border bg-white p-6 text-base text-muted" role="status">Memuat detail pesanan...</div>
       <div v-else-if="loadError || !order" class="mt-6 rounded-lg border border-red-200 bg-red-50 p-6 text-base text-red-700" role="alert">
@@ -12,14 +18,6 @@
       </div>
 
       <template v-else>
-        <header class="mt-4 flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 class="text-[1.875rem] font-semibold leading-tight tracking-tight">{{ order.order_number }}</h1>
-            <p class="mt-1 text-sm text-muted">{{ formatDate(order.created_at) }} · {{ order.buyer_name }}</p>
-          </div>
-          <span class="rounded-full px-3 py-1.5 text-sm font-semibold" :class="statusClass(order.status)">{{ statusMeta.label }}</span>
-        </header>
-
         <div v-if="onHold" class="mt-6 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900" role="status">
           <p class="font-semibold">Pesanan ditahan karena laporan pembeli</p>
           <p class="mt-1">Admin sedang meninjau laporan ini. Tindakan seller ditunda hingga ada keputusan.</p>
@@ -129,7 +127,7 @@
         <h2 id="order-action-title" class="text-lg font-semibold">{{ dialogMode === 'reject' ? 'Tolak pesanan?' : dialogMode === 'cancel_item' ? 'Batalkan item?' : 'Tandai pesanan diterima?' }}</h2>
         <p id="order-action-description" class="mt-2 text-sm text-muted">{{ dialogMode === 'reject' ? 'Pembeli akan menerima alasan penolakan. Pesanan ini dibatalkan sebelum pembayaran.' : dialogMode === 'cancel_item' ? `Item ${selectedItem?.product_name_snapshot ?? ''} akan dibatalkan dan pengembalian dana diproses oleh admin.` : 'Pembeli akan menerima pemberitahuan. Pesanan dapat selesai otomatis setelah 3 hari jika tidak ada laporan masalah.' }}</p>
         <div v-if="dialogMode === 'reject'" class="mt-4">
-          <label class="seller-form-label" for="reject-reason">Alasan Penolakan *</label>
+          <label class="seller-form-label" for="reject-reason">Alasan Penolakan <span class="text-red-600">*</span></label>
           <textarea id="reject-reason" v-model="rejectReason" class="seller-form-input min-h-24 resize-y" placeholder="Jelaskan alasan penolakan kepada pembeli" autofocus />
           <p v-if="dialogError" class="mt-1 text-sm text-red-700" role="alert">{{ dialogError }}</p>
         </div>
@@ -144,6 +142,7 @@
 </template>
 
 <script setup lang="ts">
+import AppPageTitle from '~/components/ui/AppPageTitle.vue'
 import { ORDER_STATUS, sellerOrderActions } from '~/utils/seller-order-status.mjs'
 
 definePageMeta({ middleware: 'seller', layout: 'seller' })
@@ -163,6 +162,7 @@ const route = useRoute()
 const orderId = String(route.params.id)
 const { data, pending, error: loadError, refresh } = await useFetch(`/api/seller/orders/${orderId}`)
 const order = computed(() => data.value?.order as Order | undefined)
+useHead({ title: () => order.value?.order_number ?? 'Detail Pesanan' })
 const payout = computed(() => data.value?.payout as Payout | null)
 const refunds = computed(() => (data.value?.refunds ?? []) as Refund[])
 const onHold = computed(() => Boolean(order.value?.issue_reported_at && !order.value?.issue_resolved_at))

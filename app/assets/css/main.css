@@ -2,7 +2,7 @@
 @source "../../pages";
 
 @theme {
-  --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Google Sans Flex', ui-sans-serif, system-ui, sans-serif;
 
   --color-canvas: #f3f3f0;
   --color-brand: #173f3b;
@@ -11,88 +11,116 @@
   --color-muted: #7a7d76;
   --color-field: #e4e4df;
   --color-border: #e6e6e1;
+
+  /* Tighter radius scale: controls 6px, cards 8px, shells 10px */
+  --radius-lg: 0.375rem;
+  --radius-xl: 0.5rem;
+  --radius-2xl: 0.625rem;
 }
 
-html,
-body,
-#__nuxt {
-  min-height: 100%;
+@layer base {
+  html,
+  body,
+  #__nuxt {
+    min-height: 100%;
+  }
+
+  body {
+    @apply bg-canvas text-ink antialiased;
+  }
 }
 
-body {
-  @apply bg-canvas text-ink antialiased;
+/* Page transition (app.pageTransition in nuxt.config.ts).
+   .page-loading blurs the current page while the next page's data loads (plugins/page-loading.client.ts);
+   it sits before the leave/enter rules so they win once the new page is ready. */
+.page-loading {
+  opacity: 0.5;
+  filter: blur(8px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, filter 0.2s ease;
+}
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.2s ease, filter 0.2s ease;
+}
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+  filter: blur(8px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-loading,
+  .page-enter-active,
+  .page-leave-active {
+    transition: none;
+  }
 }
 
-/* Centered auth canvas: fills the viewport, content centered, 16:9-oriented composition */
-.auth-canvas {
-  @apply flex min-h-screen w-full flex-col items-center justify-center gap-6 p-6;
-}
+@layer components {
+  /* Centered auth canvas: fills the viewport, content centered, 16:9-oriented composition */
+  .auth-canvas {
+    @apply flex min-h-screen w-full flex-col items-center justify-center gap-6 p-6;
+  }
 
-.auth-card {
-  @apply w-full max-w-[420px] rounded-2xl border border-border bg-white p-8 shadow-sm;
-}
+  .auth-card {
+    @apply w-full max-w-[420px] rounded-2xl border border-border bg-white p-8 shadow-sm;
+  }
 
-.auth-logo {
-  @apply text-2xl font-bold tracking-tight text-brand;
-}
+  .auth-logo {
+    @apply flex items-baseline justify-center gap-2 text-2xl font-bold tracking-tight text-brand;
+  }
 
-.auth-subtitle {
-  @apply mt-2 text-sm text-muted;
-}
+  .auth-subtitle {
+    @apply mt-2 text-sm text-muted;
+  }
 
-.field-label {
-  @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted;
-}
+  .field-label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted;
+  }
 
-.field-input {
-  @apply w-full rounded-lg border-none bg-field px-4 py-2.5 text-sm text-ink placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-brand/40;
-}
+  .field-input {
+    @apply w-full rounded-md border border-field bg-transparent px-4 py-2.5 text-sm text-ink placeholder:text-muted/70 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20;
+  }
 
-.field-error {
-  @apply mt-1.5 text-xs text-red-600;
-}
+  .field-error {
+    @apply mt-1.5 text-xs text-red-600;
+  }
 
-.seller-form-label {
-  @apply mb-2 block text-[13px] font-semibold uppercase tracking-wide text-muted;
-}
+  .seller-form-label {
+    @apply mb-2 block text-[13px] font-semibold uppercase tracking-wide text-muted;
+  }
 
-.seller-product-form,
-.seller-detail-column {
-  width: 100%;
-  max-width: clamp(37rem, 55vw, 52rem);
-  margin-inline: auto;
-}
+  .seller-form-input {
+    @apply w-full rounded-md border-0 bg-field px-3 py-2.5 text-base text-ink placeholder:text-muted focus:outline-2 focus:outline-brand;
+  }
 
-.seller-form-input {
-  @apply w-full rounded-md border-0 bg-field px-3 py-2.5 text-base text-ink placeholder:text-muted focus:outline-2 focus:outline-brand;
-}
+  input.seller-form-input,
+  select.seller-form-input {
+    min-height: 48px;
+  }
 
-input.seller-form-input,
-select.seller-form-input {
-  min-height: 48px;
-}
+  .btn-primary {
+    @apply w-full rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-brand/40 disabled:cursor-not-allowed disabled:opacity-50;
+  }
 
-.btn-primary {
-  @apply w-full rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-brand/40 disabled:cursor-not-allowed disabled:opacity-50;
-}
+  .link-muted {
+    @apply text-muted;
+  }
 
-.link-muted {
-  @apply text-muted;
-}
+  .link-brand {
+    @apply font-medium text-brand hover:underline;
+  }
 
-.link-brand {
-  @apply font-medium text-brand hover:underline;
+  /* Shared seller workspace rhythm. */
+  .seller-page {
+    @apply min-h-dvh bg-white px-5 py-6 text-ink sm:px-8 sm:py-8 lg:px-10 lg:py-10;
+  }
+  .seller-page-inner { width: 100%; max-width: 80rem; margin-inline: auto; }
+  .seller-page-header { @apply mb-7 flex flex-wrap items-start justify-between gap-4; }
+  .seller-page-title { @apply text-2xl font-semibold leading-tight tracking-tight text-ink sm:text-3xl; }
+  .seller-page-subtitle { @apply mt-1 text-sm leading-relaxed text-muted sm:text-base; }
+  .seller-card { @apply rounded-xl border border-border bg-white shadow-sm; }
+  .seller-card-padded { @apply rounded-xl border border-border bg-white p-5 shadow-sm sm:p-6; }
+  .seller-section-title { @apply text-base font-semibold text-ink sm:text-lg; }
+  .seller-secondary-button { @apply inline-flex min-h-11 items-center justify-center rounded-lg border border-border bg-white px-4 text-sm font-semibold text-ink transition-colors hover:border-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50; }
 }
-
-/* Shared seller workspace rhythm. */
-.seller-page {
-  @apply min-h-dvh bg-canvas px-5 py-6 text-ink sm:px-8 sm:py-8 lg:px-10 lg:py-10;
-}
-.seller-page-inner { width: 100%; max-width: 80rem; margin-inline: auto; }
-.seller-page-header { @apply mb-7 flex flex-wrap items-start justify-between gap-4; }
-.seller-page-title { @apply text-2xl font-semibold leading-tight tracking-tight text-ink sm:text-3xl; }
-.seller-page-subtitle { @apply mt-1 text-sm leading-relaxed text-muted sm:text-base; }
-.seller-card { @apply rounded-xl border border-border bg-white shadow-sm; }
-.seller-card-padded { @apply rounded-xl border border-border bg-white p-5 shadow-sm sm:p-6; }
-.seller-section-title { @apply text-base font-semibold text-ink sm:text-lg; }
-.seller-secondary-button { @apply inline-flex min-h-11 items-center justify-center rounded-lg border border-border bg-white px-4 text-sm font-semibold text-ink transition-colors hover:border-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50; }

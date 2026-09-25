@@ -24,6 +24,10 @@ export default defineEventHandler(async (event) => {
     }
   }
 
+  if (!isCountryCode(body.destination)) {
+    throw apiError(400, 'INVALID_INPUT', 'destination must be an ISO 3166-1 alpha-2 country code')
+  }
+
   if ('description' in body && typeof body.description !== 'string') {
     throw apiError(400, 'INVALID_INPUT', 'description must be a string')
   }

@@ -1,15 +1,18 @@
 <template>
   <main class="seller-page">
-    <section class="mx-auto max-w-3xl">
-      <button class="mb-5 text-sm text-muted hover:text-brand" type="button" @click="navigateTo('/seller/dashboard')">← Batal</button>
-      <h1 class="mb-6 text-2xl font-bold text-ink">Buat Trip Baru</h1>
+    <section class="seller-page-inner">
+      <AppPageTitle title="Buat Trip Baru" back-to="/seller/dashboard" back-label="Batal" class="mb-6" />
 
-      <form class="space-y-4" @submit.prevent="submit">
+      <form class="items-start gap-4 grid lg:grid-cols-[minmax(0,1fr)_24rem]" @submit.prevent="submit">
         <section class="rounded-xl border border-border bg-white p-6 shadow-sm">
           <h2 class="border-b border-border pb-4 text-sm font-semibold">Informasi Dasar</h2>
           <div class="mt-5 space-y-4">
             <AppTextField v-model="form.title" id="title" name="title" label="Judul Trip *" placeholder="contoh: Japanese Travel 2026" autocomplete="off" :error="fieldErrors.title" />
-            <AppTextField v-model="form.destination" id="destination" name="destination" label="Destinasi" placeholder="contoh: Tokyo, Osaka, Kyoto" autocomplete="off" :error="fieldErrors.destination" />
+            <div>
+              <label class="field-label" for="destination">Negara <span class="text-red-600">*</span></label>
+              <AppSelect id="destination" v-model="form.destination" :options="COUNTRY_OPTIONS" searchable placeholder="Pilih negara" search-placeholder="Cari negara..." :invalid="Boolean(fieldErrors.destination)" :aria-describedby="fieldErrors.destination ? 'destination-error' : undefined" />
+              <p v-if="fieldErrors.destination" id="destination-error" class="field-error">{{ fieldErrors.destination }}</p>
+            </div>
             <div class="grid gap-4 sm:grid-cols-2">
               <AppTextField v-model="form.order_open_at" id="order-open" name="order_open_at" label="Tanggal Mulai *" type="date" :error="fieldErrors.order_open_at" />
               <AppTextField v-model="form.order_close_at" id="order-close" name="order_close_at" label="Tanggal Selesai *" type="date" :error="fieldErrors.order_close_at" />
@@ -21,28 +24,33 @@
           </div>
         </section>
 
-        <section class="rounded-xl border border-border bg-white p-6 shadow-sm">
-          <h2 class="text-sm font-semibold">Cover Image</h2>
-          <p class="mt-1 text-xs text-muted">Masukkan URL gambar cover. Satu gambar digunakan untuk desktop dan mobile.</p>
-          <div class="mt-4">
-            <AppTextField v-model="form.thumbnail_url" id="thumbnail" name="thumbnail_url" label="URL Cover *" type="url" placeholder="https://..." :error="fieldErrors.thumbnail_url" />
-          </div>
-          <img v-if="form.thumbnail_url" :src="form.thumbnail_url" alt="Preview cover" class="mt-4 h-40 w-full rounded-lg object-cover" @error="imageError = true">
-          <p v-if="imageError" class="field-error">URL gambar tidak dapat dimuat.</p>
-        </section>
-
-        <p v-if="errorMessage" class="field-error">{{ errorMessage }}</p>
-        <AppButton type="submit" :disabled="loading">{{ loading ? 'Membuat Trip...' : 'Buat Trip' }}</AppButton>
+        <div class="space-y-4">
+          <section class="rounded-xl border border-border bg-white p-6 shadow-sm">
+            <h2 class="text-sm font-semibold">Cover Image</h2>
+            <p class="mt-1 text-xs text-muted">Masukkan URL gambar cover. Satu gambar digunakan untuk desktop dan mobile.</p>
+            <div class="mt-4">
+              <AppTextField v-model="form.thumbnail_url" id="thumbnail" name="thumbnail_url" label="URL Cover *" type="url" placeholder="https://..." :error="fieldErrors.thumbnail_url" />
+            </div>
+            <img v-if="form.thumbnail_url" :src="form.thumbnail_url" alt="Preview cover" class="mt-4 rounded-lg w-full aspect-video object-cover" @error="imageError = true">
+            <p v-if="imageError" class="field-error">URL gambar tidak dapat dimuat.</p>
+          </section>
+          <p v-if="errorMessage" class="field-error">{{ errorMessage }}</p>
+          <AppButton type="submit" :disabled="loading">{{ loading ? 'Membuat Trip...' : 'Buat Trip' }}</AppButton>
+        </div>
       </form>
     </section>
   </main>
 </template>
 
 <script setup lang="ts">
+import AppPageTitle from '~/components/ui/AppPageTitle.vue'
 import AppTextField from '../../../components/ui/AppTextField.vue'
 import AppButton from '../../../components/ui/AppButton.vue'
+import AppSelect from '../../../components/ui/AppSelect.vue'
+import { COUNTRY_OPTIONS } from '#shared/utils/countries'
 
 definePageMeta({ middleware: 'seller', layout: 'seller' })
+useHead({ title: 'Buat Trip' })
 
 const form = reactive({ title: '', destination: '', description: '', thumbnail_url: '', order_open_at: '', order_close_at: '' })
 const fieldErrors = reactive<Record<string, string>>({})

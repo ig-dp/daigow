@@ -2,7 +2,7 @@
   <main class="min-h-dvh bg-[#fafaf8] text-ink">
     <header class="sticky top-0 z-20 border-b border-border bg-white/95 backdrop-blur">
       <div class="mx-auto flex max-w-[1440px] items-center gap-5 px-5 py-3 sm:px-8 lg:px-10">
-        <span class="shrink-0 text-xl font-bold tracking-tight text-brand">DAIGOW</span>
+        <span class="flex shrink-0 items-baseline gap-2 text-xl font-bold tracking-tight text-brand"><img src="/logo.svg" alt="" class="h-[1.5cap] w-auto translate-y-[0.25cap]">DAIGOW</span>
         <label v-if="trip?.status !== 'coming_soon'" class="relative ml-auto hidden w-full max-w-[480px] sm:block">
           <span class="sr-only">Cari produk</span>
           <svg class="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg>
@@ -27,7 +27,7 @@
         <img v-if="trip.thumbnail_url && !coverFailed" :src="trip.thumbnail_url" alt="" class="absolute inset-0 h-full w-full object-cover" @error="coverFailed = true">
         <div class="absolute inset-0 bg-gradient-to-r from-[#102b28]/95 via-[#102b28]/75 to-[#102b28]/20" aria-hidden="true" />
         <div class="relative mx-auto flex min-h-[250px] max-w-[1440px] flex-col justify-end px-5 py-8 sm:min-h-[270px] sm:px-8 sm:py-10 lg:px-10">
-          <p class="text-xs font-bold uppercase tracking-[0.2em] text-white/75">{{ trip.destination }}</p>
+          <p class="text-xs font-bold uppercase tracking-[0.2em] text-white/75">{{ countryName(trip.destination) }}</p>
           <h1 id="trip-title" class="mt-2 max-w-3xl text-3xl font-bold leading-tight tracking-tight sm:text-4xl lg:text-[42px]">{{ trip.title }}</h1>
           <p v-if="trip.description" class="mt-3 max-w-2xl line-clamp-2 text-sm leading-relaxed text-white/80 sm:text-base">{{ trip.description }}</p>
           <div class="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-white/90">
@@ -54,9 +54,7 @@
       <section v-else class="mx-auto grid max-w-[1440px] gap-8 px-5 pb-16 pt-8 sm:px-8 lg:grid-cols-[210px_minmax(0,1fr)] lg:gap-10 lg:px-10" aria-labelledby="catalog-title">
         <aside class="lg:pt-1" aria-label="Filter dan urutkan produk">
           <label for="catalog-sort" class="block text-xs font-bold uppercase tracking-[0.14em] text-muted">Urutkan</label>
-          <select id="catalog-sort" v-model="sortBy" class="mt-2 min-h-11 w-full rounded-lg border border-border bg-white px-3 text-sm text-ink focus-visible:outline-2 focus-visible:outline-brand">
-            <option value="newest">Terbaru</option><option value="low">Harga: rendah ke tinggi</option><option value="high">Harga: tinggi ke rendah</option>
-          </select>
+          <AppSelect id="catalog-sort" v-model="sortBy" :options="SORT_OPTIONS" class="mt-2" />
           <fieldset v-if="categories.length" class="mt-6 border-t border-border pt-5">
             <legend class="text-xs font-bold uppercase tracking-[0.14em] text-muted">Kategori</legend>
             <label v-for="category in categories" :key="category" class="mt-3 flex cursor-pointer items-center gap-2 text-sm leading-snug"><input v-model="selectedCategories" type="checkbox" :value="category" class="size-4 accent-brand"><span>{{ category }}</span></label>
@@ -106,6 +104,7 @@
 </template>
 
 <script setup lang="ts">
+import AppSelect from '~/components/ui/AppSelect.vue'
 type PublicVariant = { id: string; name: string; price: number }
 type PublicProduct = { id: string; name: string; category: string | null; description: string | null; price: number; created_at: string; product_photos: { photo_url: string; sort_order: number }[]; product_variants: PublicVariant[] }
 type PublicTrip = { id: string; slug: string; title: string; destination: string; description: string | null; thumbnail_url: string | null; order_open_at: string; order_close_at: string; status: string; products: PublicProduct[] }
@@ -121,6 +120,11 @@ const subscribing = ref(false)
 const subscribed = ref(false)
 const subscribeMessage = ref('')
 const search = ref('')
+const SORT_OPTIONS = [
+  { value: 'newest', label: 'Terbaru' },
+  { value: 'low', label: 'Harga: rendah ke tinggi' },
+  { value: 'high', label: 'Harga: tinggi ke rendah' }
+]
 const sortBy = ref('newest')
 const selectedCategories = ref<string[]>([])
 const visibleCount = ref(18)

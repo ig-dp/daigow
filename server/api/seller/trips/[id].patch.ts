@@ -28,6 +28,10 @@ export default defineEventHandler(async (event) => {
     }
   }
 
+  if ('destination' in body && !isCountryCode(body.destination)) {
+    throw apiError(400, 'INVALID_INPUT', 'destination must be an ISO 3166-1 alpha-2 country code')
+  }
+
   const { data: existing, error: findError } = await getOwnedTrip(event, seller.id, tripId)
   if (findError?.code === 'PGRST116') throw apiError(404, 'TRIP_NOT_FOUND', 'Trip not found')
   if (findError) {
