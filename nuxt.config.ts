@@ -24,6 +24,7 @@ export default defineNuxtConfig({
     geminiApiKey: '',
     resendApiKey: '',
     cronSecret: '',
-    jastiperInviteCode: ''
+    jastiperInviteCode: '',
+    adminAppOrigin: ''
   }
 })
