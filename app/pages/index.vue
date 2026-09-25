@@ -1,61 +1,15 @@
 <template>
-  <AuthShell subtitle="Masuk sebagai Seller">
-    <form class="space-y-4" @submit.prevent="submit">
-      <p v-if="errorMessage" class="field-error">{{ errorMessage }}</p>
-      <AppTextField
-        id="email"
-        v-model="email"
-        name="email"
-        type="email"
-        label="Email"
-        placeholder="seller@email.com"
-        autocomplete="email"
-      />
-      <AppTextField
-        id="password"
-        v-model="password"
-        name="password"
-        type="password"
-        label="Password"
-        placeholder="••••••••"
-        autocomplete="current-password"
-      />
-      <AppButton type="submit" :disabled="loading">{{ loading ? 'Memproses...' : 'Masuk' }}</AppButton>
-    </form>
-
-    <template #footer>
-      Belum punya akun? <a href="#" class="link-brand">Daftar sebagai Seller</a>
-    </template>
-  </AuthShell>
+  <div class="auth-canvas">
+    <AppLogo />
+    <NuxtLink to="/seller" class="inline-flex justify-center items-center gap-2 bg-brand hover:bg-brand-hover px-6 rounded-md w-full max-w-xs min-h-12 font-semibold text-white text-sm focus-visible:outline-2 focus-visible:outline-brand focus-visible:outline-offset-2">
+      <Icon name="material-symbols:storefront-outline-rounded" class="text-xl" aria-hidden="true" />
+      Masuk sebagai Penjual
+    </NuxtLink>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import AuthShell from '../components/auth/AuthShell.vue'
-import AppTextField from '../components/ui/AppTextField.vue'
-import AppButton from '../components/ui/AppButton.vue'
+import AppLogo from '~/components/ui/AppLogo.vue'
 
-const email = ref('')
-const password = ref('')
-const loading = ref(false)
-const errorMessage = ref('')
-const supabase = useSupabaseClient()
-
-async function submit() {
-  errorMessage.value = ''
-  loading.value = true
-
-  const { error } = await supabase.auth.signInWithPassword({
-    email: email.value,
-    password: password.value
-  })
-
-  loading.value = false
-  if (error) {
-    errorMessage.value = 'Email atau password salah.'
-    return
-  }
-
-  await navigateTo('/seller/dashboard')
-}
+useHead({ title: 'Daigow' })
 </script>
