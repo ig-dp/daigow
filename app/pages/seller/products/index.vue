@@ -6,17 +6,14 @@
           <h1 class="seller-page-title">Produk</h1>
           <p class="mt-1 text-sm text-muted">{{ products?.products?.length ?? 0 }} produk {{ tripId ? 'dalam trip ini' : 'di semua trip' }}</p>
         </div>
-        <NuxtLink to="/seller/products/new" class="inline-flex min-h-11 items-center gap-2 rounded-md bg-brand px-4 text-sm font-semibold text-white hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
+        <NuxtLink :to="tripId ? `/seller/products/new?trip_id=${tripId}` : '/seller/products/new'" class="inline-flex min-h-11 items-center gap-2 rounded-md bg-brand px-4 text-sm font-semibold text-white hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
           <span aria-hidden="true" class="text-base font-normal leading-none">+</span> Tambah Produk
         </NuxtLink>
       </header>
 
       <div class="mt-6 max-w-70">
         <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-muted" for="trip-filter">Trip</label>
-        <select id="trip-filter" v-model="tripId" class="min-h-11 w-full rounded-md border border-border bg-white px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
-          <option value="">Semua Trip</option>
-          <option v-for="trip in trips?.trips ?? []" :key="trip.id" :value="trip.id">{{ trip.title }}</option>
-        </select>
+        <AppSelect id="trip-filter" v-model="tripId" :options="tripOptions" placeholder="Belum ada trip" />
       </div>
 
       <div class="mt-4 overflow-hidden rounded-md border border-border bg-white">
@@ -88,11 +85,14 @@
 </template>
 
 <script setup lang="ts">
+import AppSelect from '~/components/ui/AppSelect.vue'
+import { tripSelectOption } from '~/composables/useTripStatus'
+import { useSelectedTrip } from '~/composables/useSelectedTrip'
 definePageMeta({ middleware: 'seller', layout: 'seller' })
+useHead({ title: 'Produk' })
 
 type Product = { id: string; trip_id: string; name: string; price: number; product_photos?: { photo_url: string; sort_order: number }[]; product_variants?: { id: string }[] }
 
-const tripId = ref('')
 const visibleCount = ref(20)
 const deleteDialog = ref<HTMLDialogElement | null>(null)
 const selectedProduct = ref<Product | null>(null)
@@ -100,6 +100,8 @@ const deleting = ref(false)
 const dialogError = ref('')
 
 const { data: trips } = await useFetch('/api/seller/trips')
+const tripId = useSelectedTrip(computed(() => trips.value?.trips))
+const tripOptions = computed(() => (trips.value?.trips ?? []).map(tripSelectOption))
 const { data: products, pending, error, refresh } = await useFetch('/api/seller/products', {
   query: computed(() => ({ trip_id: tripId.value || undefined }))
 })

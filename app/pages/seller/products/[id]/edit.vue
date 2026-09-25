@@ -1,11 +1,7 @@
 <template>
   <section class="seller-page">
-    <div class="seller-product-form">
-      <NuxtLink to="/seller/products" class="inline-flex items-center gap-2 text-sm text-muted hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
-        <span aria-hidden="true">←</span> Kembali ke Produk
-      </NuxtLink>
-      <h1 class="mt-4 text-[1.875rem] font-semibold leading-tight tracking-tight">Edit Produk</h1>
-      <p class="mt-1 text-base text-muted">Perbarui informasi yang dilihat pembeli.</p>
+    <div class="seller-page-inner">
+      <AppPageTitle title="Edit Produk" back-to="/seller/products" back-label="Kembali ke Produk" />
 
       <div v-if="pending" class="mt-6 rounded-lg border border-border bg-white p-6 text-base text-muted" role="status">Memuat produk...</div>
       <div v-else-if="loadError || !product" class="mt-6 rounded-lg border border-red-200 bg-red-50 p-6 text-base text-red-700" role="alert">
@@ -13,88 +9,91 @@
         <button type="button" class="ml-1 font-semibold underline" @click="refresh()">Coba lagi</button>
       </div>
 
-      <form v-else class="mt-6 space-y-5" novalidate @submit.prevent="submit">
-        <section class="rounded-lg border border-border bg-white p-5 sm:p-6" aria-labelledby="edit-photos-title">
-          <h2 id="edit-photos-title" class="text-lg font-semibold">Foto Produk</h2>
-          <p class="mt-1 text-sm text-muted">Minimal satu foto, maksimal lima foto.</p>
-          <div class="mt-4 flex flex-wrap gap-3">
-            <div v-for="(photo, index) in photos" :key="photo.preview" class="relative h-24 w-24 overflow-hidden rounded-lg border border-border bg-canvas">
-              <img :src="photo.preview" :alt="`Foto produk ${index + 1}`" class="h-full w-full object-cover">
-              <button type="button" class="absolute right-1 top-1 rounded bg-white px-1.5 py-0.5 text-sm text-ink shadow hover:text-red-700 focus-visible:outline-2 focus-visible:outline-brand" :aria-label="`Hapus foto ${index + 1}`" @click="removePhoto(index)">×</button>
-            </div>
-            <label v-if="photos.length < 5" class="flex h-24 w-24 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted hover:border-brand hover:text-brand focus-within:outline-2 focus-within:outline-brand">
-              <span aria-hidden="true" class="text-2xl leading-none">+</span>
-              <span class="mt-1">Tambah</span>
-              <input class="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple @change="addPhotos">
-            </label>
-          </div>
-          <p v-if="errors.photos" class="mt-2 text-sm text-red-700" role="alert">{{ errors.photos }}</p>
-        </section>
-
-        <section class="rounded-lg border border-border bg-white p-5 sm:p-6" aria-labelledby="edit-detail-title">
-          <h2 id="edit-detail-title" class="border-b border-border pb-3 text-lg font-semibold">Detail Produk</h2>
-          <div class="mt-5 space-y-5">
-            <div>
-              <label class="seller-form-label" for="edit-product-name">Nama Produk *</label>
-              <input id="edit-product-name" v-model="name" class="seller-form-input" type="text" :aria-invalid="Boolean(errors.name)" :aria-describedby="errors.name ? 'edit-name-error' : undefined">
-              <p v-if="errors.name" id="edit-name-error" class="mt-1 text-sm text-red-700">{{ errors.name }}</p>
-            </div>
-            <div>
-              <label class="seller-form-label" for="edit-product-category">Kategori</label>
-              <input id="edit-product-category" v-model="category" class="seller-form-input" type="text" placeholder="Contoh: Perawatan kulit">
-            </div>
-            <div>
-              <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
-                <label class="seller-form-label mb-0" for="edit-product-description">Deskripsi</label>
-                <button type="button" class="rounded-md border border-violet-200 px-3 py-2 text-sm font-medium text-violet-700 hover:bg-violet-50 focus-visible:outline-2 focus-visible:outline-violet-600 disabled:cursor-not-allowed disabled:opacity-50" :disabled="generating || saving || !name.trim() || !photos.length" @click="generateDescription">
-                  {{ generating ? 'Membuat draft...' : '✧ Draft dengan AI' }}
-                </button>
+      <form v-else class="items-start gap-5 grid lg:grid-cols-[minmax(0,1fr)_24rem] mt-6" novalidate @submit.prevent="submit">
+        <div class="space-y-5 min-w-0">
+          <section class="rounded-lg border border-border bg-white p-5 sm:p-6" aria-labelledby="edit-detail-title">
+            <h2 id="edit-detail-title" class="border-b border-border pb-3 text-lg font-semibold">Detail Produk</h2>
+            <div class="mt-5 space-y-5">
+              <div>
+                <label class="field-label" for="edit-product-name">Nama Produk <span class="text-red-600">*</span></label>
+                <input id="edit-product-name" v-model="name" class="field-input" type="text" :aria-invalid="Boolean(errors.name)" :aria-describedby="errors.name ? 'edit-name-error' : undefined">
+                <p v-if="errors.name" id="edit-name-error" class="mt-1 text-sm text-red-700">{{ errors.name }}</p>
               </div>
-              <textarea id="edit-product-description" v-model="description" class="seller-form-input min-h-32 resize-y" placeholder="Deskripsi produk..." />
-              <p v-if="aiError" class="mt-1 text-sm text-red-700" role="alert">{{ aiError }}</p>
+              <div>
+                <label class="field-label" for="edit-product-category">Kategori</label>
+                <input id="edit-product-category" v-model="category" class="field-input" type="text" placeholder="Contoh: Perawatan kulit">
+              </div>
+              <div>
+                <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+                  <label class="field-label mb-0" for="edit-product-description">Deskripsi</label>
+                  <button type="button" class="rounded-md border border-violet-200 px-3 py-2 text-sm font-medium text-violet-700 hover:bg-violet-50 focus-visible:outline-2 focus-visible:outline-violet-600 disabled:cursor-not-allowed disabled:opacity-50" :disabled="generating || saving || !name.trim() || !photos.length" @click="generateDescription">
+                    {{ generating ? 'Membuat draft...' : '✧ Draft dengan AI' }}
+                  </button>
+                </div>
+                <textarea id="edit-product-description" v-model="description" class="field-input min-h-32 resize-y" placeholder="Deskripsi produk..." />
+                <p v-if="aiError" class="mt-1 text-sm text-red-700" role="alert">{{ aiError }}</p>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <section class="rounded-lg border border-border bg-white p-5 sm:p-6" aria-labelledby="edit-price-title">
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <h2 id="edit-price-title" class="text-lg font-semibold">Varian &amp; Harga</h2>
-            <button type="button" class="rounded-md border border-border px-3 py-2 text-sm font-medium hover:border-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-brand" @click="addVariant">+ Tambah Varian</button>
-          </div>
-          <div class="mt-4 flex flex-wrap gap-2" role="group" aria-label="Pilih harga atau varian">
-            <button type="button" :aria-pressed="activeTab === 'base'" class="rounded-md px-3 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-brand" :class="activeTab === 'base' ? 'bg-brand text-white' : 'bg-field text-ink hover:bg-border'" @click="activeTab = 'base'">Harga Dasar</button>
-            <button v-for="(variant, index) in variants" :key="variant.id" type="button" :aria-pressed="activeTab === variant.id" class="rounded-md px-3 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-brand" :class="activeTab === variant.id ? 'bg-brand text-white' : 'bg-field text-ink hover:bg-border'" @click="activeTab = variant.id">{{ variant.name || `Varian ${index + 1}` }}</button>
-          </div>
-          <div v-if="activeTab === 'base'" class="mt-5">
-            <label class="seller-form-label" for="edit-base-price">Harga Jual Dasar (IDR) *</label>
-            <input id="edit-base-price" v-model="basePrice" class="seller-form-input" type="text" inputmode="numeric" :aria-invalid="Boolean(errors.price)" :aria-describedby="errors.price ? 'edit-price-error' : undefined">
-            <p v-if="errors.price" id="edit-price-error" class="mt-1 text-sm text-red-700">{{ errors.price }}</p>
-            <p class="mt-2 text-sm text-muted">Dipakai saat produk tidak memiliki varian.</p>
-          </div>
-          <div v-else-if="activeVariant" class="mt-5 space-y-4">
-            <div>
-              <label class="seller-form-label" :for="`edit-variant-name-${activeVariant.id}`">Nama Varian *</label>
-              <input :id="`edit-variant-name-${activeVariant.id}`" v-model="activeVariant.name" class="seller-form-input" type="text" placeholder="Contoh: 30 ml">
+          <section class="rounded-lg border border-border bg-white p-5 sm:p-6" aria-labelledby="edit-price-title">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <h2 id="edit-price-title" class="text-lg font-semibold">Varian &amp; Harga</h2>
+              <button type="button" class="rounded-md border border-border px-3 py-2 text-sm font-medium hover:border-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-brand" @click="addVariant">+ Tambah Varian</button>
             </div>
-            <div>
-              <label class="seller-form-label" :for="`edit-variant-price-${activeVariant.id}`">Harga Jual Varian (IDR) *</label>
-              <input :id="`edit-variant-price-${activeVariant.id}`" v-model="activeVariant.price" class="seller-form-input" type="text" inputmode="numeric" placeholder="0">
+            <AppTabs v-model="activeTab" :tabs="priceTabs" label="Harga dan varian" class="mt-4" />
+            <div v-if="activeTab === 'base'" class="mt-5">
+              <label class="field-label" for="edit-base-price">Harga Jual Dasar <span class="text-red-600">*</span></label>
+              <AppNumberInput id="edit-base-price" v-model="basePrice" prefix="Rp" placeholder="0" :aria-invalid="Boolean(errors.price)" :aria-describedby="errors.price ? 'edit-price-error' : undefined" />
+              <p v-if="errors.price" id="edit-price-error" class="mt-1 text-sm text-red-700">{{ errors.price }}</p>
+              <p class="mt-2 text-sm text-muted">Dipakai saat produk tidak memiliki varian.</p>
             </div>
-            <button type="button" class="text-sm font-medium text-red-700 hover:underline focus-visible:outline-2 focus-visible:outline-red-700" @click="removeVariant(activeVariant.id)">Hapus Varian</button>
-          </div>
-          <p v-if="errors.variants" class="mt-2 text-sm text-red-700" role="alert">{{ errors.variants }}</p>
-        </section>
+            <div v-else-if="activeVariant" class="mt-5 space-y-4">
+              <div>
+                <label class="field-label" :for="`edit-variant-name-${activeVariant.id}`">Nama Varian <span class="text-red-600">*</span></label>
+                <input :id="`edit-variant-name-${activeVariant.id}`" v-model="activeVariant.name" class="field-input" type="text" placeholder="Contoh: 30 ml">
+              </div>
+              <div>
+                <label class="field-label" :for="`edit-variant-price-${activeVariant.id}`">Harga Jual Varian <span class="text-red-600">*</span></label>
+                <AppNumberInput :id="`edit-variant-price-${activeVariant.id}`" v-model="activeVariant.price" prefix="Rp" placeholder="0" />
+              </div>
+              <button type="button" class="text-sm font-medium text-red-700 hover:underline focus-visible:outline-2 focus-visible:outline-red-700" @click="removeVariant(activeVariant.id)">Hapus Varian</button>
+            </div>
+            <p v-if="errors.variants" class="mt-2 text-sm text-red-700" role="alert">{{ errors.variants }}</p>
+          </section>
+        </div>
 
-        <p v-if="saveError" class="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">{{ saveError }}</p>
-        <button type="submit" class="min-h-12 w-full rounded-md bg-brand px-5 text-base font-semibold text-white hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50" :disabled="saving || generating">
-          {{ saving ? 'Menyimpan perubahan...' : 'Simpan Perubahan' }}
-        </button>
+        <div class="space-y-5">
+          <section class="rounded-lg border border-border bg-white p-5 sm:p-6" aria-labelledby="edit-photos-title">
+            <h2 id="edit-photos-title" class="text-lg font-semibold">Foto Produk</h2>
+            <p class="mt-1 text-sm text-muted">Minimal satu foto, maksimal lima foto.</p>
+            <div class="mt-4 flex flex-wrap gap-3">
+              <div v-for="(photo, index) in photos" :key="photo.preview" class="relative h-24 w-24 overflow-hidden rounded-lg border border-border bg-canvas">
+                <img :src="photo.preview" :alt="`Foto produk ${index + 1}`" class="h-full w-full object-cover">
+                <button type="button" class="absolute right-1 top-1 rounded bg-white px-1.5 py-0.5 text-sm text-ink shadow hover:text-red-700 focus-visible:outline-2 focus-visible:outline-brand" :aria-label="`Hapus foto ${index + 1}`" @click="removePhoto(index)">×</button>
+              </div>
+              <label v-if="photos.length < 5" class="flex h-24 w-24 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted hover:border-brand hover:text-brand focus-within:outline-2 focus-within:outline-brand">
+                <span aria-hidden="true" class="text-2xl leading-none">+</span>
+                <span class="mt-1">Tambah</span>
+                <input class="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple @change="addPhotos">
+              </label>
+            </div>
+            <p v-if="errors.photos" class="mt-2 text-sm text-red-700" role="alert">{{ errors.photos }}</p>
+          </section>
+          <p v-if="saveError" class="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">{{ saveError }}</p>
+          <button type="submit" class="min-h-12 w-full rounded-md bg-brand px-5 text-base font-semibold text-white hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50" :disabled="saving || generating">
+            {{ saving ? 'Menyimpan perubahan...' : 'Simpan Perubahan' }}
+          </button>
+        </div>
       </form>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
+import AppPageTitle from '~/components/ui/AppPageTitle.vue'
+import AppTabs from '~/components/ui/AppTabs.vue'
+import AppNumberInput from '~/components/ui/AppNumberInput.vue'
 import { descriptionSource, parseRupiah } from '~/utils/product-form.mjs'
 
 definePageMeta({ middleware: 'seller', layout: 'seller' })
@@ -108,6 +107,7 @@ const user = useSupabaseUser()
 const supabase = useSupabaseClient()
 const { data, pending, error: loadError, refresh } = await useFetch(`/api/seller/products/${productId}`)
 const product = computed(() => data.value?.product)
+useHead({ title: () => product.value ? `Edit ${product.value.name}` : 'Edit Produk' })
 const name = ref('')
 const category = ref('')
 const description = ref('')
@@ -118,6 +118,7 @@ const variants = ref<Variant[]>([])
 const initialPhotos = ref<string[]>([])
 const initialVariants = ref<string>('')
 const activeTab = ref('base')
+const priceTabs = computed(() => [{ value: 'base', label: 'Harga Dasar' }, ...variants.value.map((variant, index) => ({ value: variant.id, label: variant.name || `Varian ${index + 1}` }))])
 const activeVariant = computed(() => variants.value.find((variant) => variant.id === activeTab.value))
 const errors = reactive<Record<string, string>>({})
 const aiError = ref('')
