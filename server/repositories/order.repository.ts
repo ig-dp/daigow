@@ -96,6 +96,14 @@ export function listSellerOrders(event: H3Event, jastiperId: string, filters: { 
   return query
 }
 
+export async function countAwaitingConfirmationByTrip(event: H3Event, tripIds: string[]) {
+  const counts = new Map<string, number>()
+  if (!tripIds.length) return { counts, error: null }
+  const { data, error } = await getSupabaseAdmin(event).from('orders').select('trip_id').eq('status', 'awaiting_confirmation').in('trip_id', tripIds)
+  for (const order of data ?? []) counts.set(order.trip_id, (counts.get(order.trip_id) ?? 0) + 1)
+  return { counts, error }
+}
+
 export function getOwnedOrder(event: H3Event, jastiperId: string, orderId: string) {
   return getSupabaseAdmin(event).from('orders').select(`${sellerOrderFields},trips!inner(jastiper_id)`).eq('id', orderId).eq('trips.jastiper_id', jastiperId).single()
 }
