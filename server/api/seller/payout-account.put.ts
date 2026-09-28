@@ -5,6 +5,7 @@ import { upsertPayoutAccount } from '../../repositories/payout-account.repositor
 
 const REQUIRED_KEYS = ['bank_code', 'account_number', 'account_holder_name'] as const
 const ALLOWED_KEYS = new Set(REQUIRED_KEYS)
+const SUPPORTED_BANK_CODES = new Set(['BCA'])
 
 export default defineEventHandler(async (event) => {
   const seller = await requireSeller(event)
@@ -24,6 +25,10 @@ export default defineEventHandler(async (event) => {
     if (typeof body[key] !== 'string' || body[key].length === 0) {
       throw apiError(400, 'INVALID_INPUT', `${key} must be a non-empty string`)
     }
+  }
+
+  if (!SUPPORTED_BANK_CODES.has(body.bank_code)) {
+    throw apiError(400, 'INVALID_INPUT', 'Saat ini payout hanya mendukung rekening BCA.')
   }
 
   const { data, error } = await upsertPayoutAccount(event, seller.id, {

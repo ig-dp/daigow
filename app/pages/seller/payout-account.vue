@@ -32,7 +32,9 @@ import AppTextField from '~/components/ui/AppTextField.vue'
 definePageMeta({ middleware: 'seller', layout: 'seller' })
 useHead({ title: 'Akun Payout' })
 
-const BANKS = [{ value: 'BCA', label: 'BCA' }, { value: 'BNI', label: 'BNI' }, { value: 'BRI', label: 'BRI' }, { value: 'MANDIRI', label: 'Mandiri' }, { value: 'CIMB', label: 'CIMB Niaga' }]
+// Keep this list aligned with shared/utils/payout.mjs until each channel has
+// been verified in Xendit's Payouts v3 Dynamic Schema.
+const BANKS = [{ value: 'BCA', label: 'BCA (Payouts v3)' }]
 const form = reactive({ bank_code: '', account_number: '', account_holder_name: '' })
 const fieldErrors = reactive<Record<string, string>>({})
 const saving = ref(false)
@@ -40,7 +42,14 @@ const saved = ref(false)
 const message = ref('')
 
 const { data } = await useFetch('/api/seller/payout-account', { default: () => ({ payoutAccount: null }) })
-if (data.value?.payoutAccount) Object.assign(form, data.value.payoutAccount)
+if (data.value?.payoutAccount) {
+  const payoutAccount = data.value.payoutAccount
+  Object.assign(form, {
+    bank_code: payoutAccount.bank_code ?? '',
+    account_number: payoutAccount.account_number ?? '',
+    account_holder_name: payoutAccount.account_holder_name ?? ''
+  })
+}
 
 async function save() {
   Object.keys(fieldErrors).forEach(key => delete fieldErrors[key])
@@ -52,7 +61,14 @@ async function save() {
   if (Object.keys(fieldErrors).length) return
   saving.value = true
   try {
-    await $fetch('/api/seller/payout-account', { method: 'PUT', body: form })
+    await $fetch('/api/seller/payout-account', {
+      method: 'PUT',
+      body: {
+        bank_code: form.bank_code,
+        account_number: form.account_number,
+        account_holder_name: form.account_holder_name
+      }
+    })
     saved.value = true
     message.value = 'Informasi rekening berhasil disimpan.'
   } catch {

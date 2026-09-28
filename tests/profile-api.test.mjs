@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert'
 import { createHash, timingSafeEqual } from 'node:crypto'
+import { buildPayoutRequest, normalizePayoutStatus } from '../shared/utils/payout.mjs'
 
 // Inlined rate limiter (from server/utils/invite-rate-limit.ts)
 const MAX_ATTEMPTS = 5
@@ -412,3 +413,53 @@ test('payment webhook transitions successful payment once', () => {
   assert.deepStrictEqual(applyPaymentWebhook('awaiting_payment', 'pending', 'EXPIRED'), { payment: 'expired', order: 'awaiting_payment' })
 })
 
+test('payout request uses the seller bank snapshot and stable external id', () => {
+  assert.deepStrictEqual(buildPayoutRequest({
+    externalId: 'payout-order-1-1',
+    amount: 975000,
+    account: { bank_code: 'BCA', account_number: '1234567890', account_holder_name: 'Dian Muse' },
+    description: 'Daigow payout order-1',
+    email: 'seller@example.com'
+  }), {
+    reference_id: 'payout-order-1-1',
+    recipient: {
+      type: 'INDIVIDUAL',
+      given_name: 'Dian',
+      surname: 'Muse',
+      relationship: 'SUPPLIER',
+      details: { personal_email: 'seller@example.com' },
+      address: { country: 'ID' },
+      account_details: {
+        currency: 'IDR',
+        account_country: 'ID',
+        account_holder_name: 'Dian Muse',
+        account_number: '1234567890',
+        routing_type_1: 'SWIFT',
+        routing_value_1: 'CENAIDJA'
+      }
+    },
+    payout_details: {
+      source_currency: 'IDR',
+      source_amount: 975000,
+      destination_currency: 'IDR'
+    },
+    source_of_fund: 'BUSINESS_REVENUE',
+    purpose_code: 'TRADES',
+    description: 'Daigow payout order-1'
+  })
+})
+
+test('payout webhook status mapping is terminal and idempotent', () => {
+  assert.equal(normalizePayoutStatus('SUCCEEDED'), 'succeeded')
+  assert.equal(normalizePayoutStatus('FAILED'), 'failed')
+  assert.equal(normalizePayoutStatus('PENDING_COMPLIANCE_REVIEW'), 'pending')
+})
+
+test('payout request rejects channels without a verified v3 mapping', () => {
+  assert.throws(() => buildPayoutRequest({
+    externalId: 'payout-order-2-1',
+    amount: 1000,
+    account: { bank_code: 'BNI', account_number: '123', account_holder_name: 'Dian Muse' },
+    description: 'Daigow payout order-2'
+  }), /Unsupported payout channel: BNI/)
+})
