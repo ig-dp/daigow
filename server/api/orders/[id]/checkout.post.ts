@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   if (!body || typeof body !== 'object' || Array.isArray(body)) throw apiError(400, 'INVALID_INPUT', 'Body must be a JSON object')
   if (body.method !== 'va' && body.method !== 'qris') throw apiError(400, 'INVALID_INPUT', 'method must be "va" or "qris"')
-  const channelCode = body.method === 'va' ? (body.channel_code ?? 'BCA') : 'QRIS'
+  const channelCode = body.method === 'va' ? (body.channel_code === 'BCA' ? 'BCA_VIRTUAL_ACCOUNT' : (body.channel_code ?? 'BCA_VIRTUAL_ACCOUNT')) : 'QRIS'
 
   if (order.status !== 'awaiting_payment' || new Date() >= new Date(order.payment_deadline)) throw apiError(409, 'INVALID_STATE', 'Order is not awaiting payment')
 
@@ -26,17 +26,25 @@ export default defineEventHandler(async (event) => {
   try {
     providerResponse = await createPaymentRequest({
       reference_id: orderId,
+      type: 'PAY',
+      country: 'ID',
       currency: 'IDR',
-      amount,
-      payment_method: {
-        type: body.method === 'va' ? 'VIRTUAL_ACCOUNT' : 'QR_CODE',
-        reusability: 'ONE_TIME_USE',
-        [body.method === 'va' ? 'virtual_account' : 'qr_code']: { channel_code: channelCode, channel_properties: {} },
+      request_amount: amount,
+      channel_code: channelCode,
+      channel_properties: {
+        expires_at: expiresAt,
+        ...(body.method === 'va' ? { display_name: order.buyer_name } : {}),
       },
     })
   } catch (err) {
     console.error('Xendit createPaymentRequest failed:', (err as Error).message)
     throw apiError(502, 'PAYMENT_PROVIDER_ERROR', 'Failed to create payment with provider')
+  }
+
+  const paymentRequestId = providerResponse?.payment_request_id ?? providerResponse?.id
+  if (typeof paymentRequestId !== 'string' || !paymentRequestId) {
+    console.error('Xendit response did not contain a payment request id:', providerResponse)
+    throw apiError(502, 'PAYMENT_PROVIDER_ERROR', 'Payment provider returned an invalid response')
   }
 
   const { data: payment, error: paymentError } = await insertPayment(event, {
@@ -45,7 +53,7 @@ export default defineEventHandler(async (event) => {
     channel_code: channelCode,
     channel_fee_amount: channelFee,
     amount,
-    xendit_payment_request_id: providerResponse.id,
+    xendit_payment_request_id: paymentRequestId,
     status: 'pending',
     expires_at: expiresAt,
   })

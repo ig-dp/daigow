@@ -15,11 +15,11 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event);
   if (!body || typeof body !== "object" || Array.isArray(body))
     throw apiError(400, "INVALID_INPUT", "Webhook body must be a JSON object");
-  const eventId = body.event_id ?? body.id;
   const eventType = body.event_type ?? body.event ?? "payment";
   const payload = body.data ?? body;
   const requestId = payload.payment_request_id ?? body.payment_request_id;
-  const status = payload.status ?? body.status;
+  const status = payload.status ?? body.status ?? (eventType === "payment.capture" ? "SUCCEEDED" : eventType === "payment.failure" ? "FAILED" : eventType === "payment_request.expiry" ? "EXPIRED" : undefined);
+  const eventId = body.event_id ?? body.id ?? [eventType, requestId, payload.payment_id ?? payload.updated ?? payload.created ?? body.created].filter(Boolean).join(":");
   if (
     typeof eventId !== "string" ||
     !eventId ||
