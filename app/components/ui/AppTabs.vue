@@ -1,5 +1,5 @@
 <template>
-  <div role="tablist" :aria-label="label" class="flex gap-1 border-b border-border overflow-x-auto">
+  <div role="tablist" :aria-label="label" class="flex gap-1 overflow-x-auto shadow-[inset_0_-1px_0_var(--color-border)]">
     <button
       v-for="(tab, index) in tabs"
       :id="tabId(tab.value)"
@@ -9,7 +9,7 @@
       role="tab"
       :aria-selected="tab.value === modelValue"
       :tabindex="tab.value === modelValue ? 0 : -1"
-      class="-mb-px px-3 py-2.5 border-b-2 font-medium text-sm whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-brand focus-visible:-outline-offset-2"
+      class="px-3 py-2.5 border-b-2 font-medium text-sm whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-brand focus-visible:-outline-offset-2"
       :class="tab.value === modelValue ? 'border-brand text-brand' : 'border-transparent text-muted hover:text-ink hover:border-border'"
       @click="select(index)"
       @keydown="onKeydown($event, index)"
