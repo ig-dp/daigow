@@ -1,6 +1,6 @@
 import { apiError } from '../../../../utils/api-error'
 import { requireAdmin } from '../../../../utils/require-admin'
-import { getAdminOrder, updateAdminOrder } from '../../../../repositories/order.repository'
+import { getAdminOrder, resolveAdminOrder } from '../../../../repositories/order.repository'
 import { createPayoutForOrder } from '../../../../repositories/payout.repository'
 
 export default defineEventHandler(async (event) => {
@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
   if (!['shipped', 'delivered'].includes(order.status)) throw apiError(409, 'INVALID_STATE', 'Order is not shipped or delivered')
 
   const now = new Date().toISOString()
-  const { data, error } = await updateAdminOrder(event, orderId, {
+  const { data, error } = await resolveAdminOrder(event, orderId, ['shipped', 'delivered'], {
     status: 'completed',
     completed_by: 'admin',
     completed_at: now,
@@ -22,6 +22,7 @@ export default defineEventHandler(async (event) => {
     issue_resolution: 'released',
     issue_resolved_by: admin.id,
   })
+  if (error?.code === 'PGRST116') throw apiError(409, 'INVALID_STATE', 'Order was already resolved')
   if (error || !data) throw apiError(500, 'INTERNAL_ERROR', 'Failed to release order')
 
   try {

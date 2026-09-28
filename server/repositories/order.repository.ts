@@ -118,17 +118,24 @@ export async function getOrderSettlement(event: H3Event, orderId: string) {
 }
 
 export function listAdminOrders(event: H3Event, onHold: boolean) {
-  let query = getSupabaseAdmin(event).from('orders').select(orderFields).order('created_at', { ascending: false })
+  let query = getSupabaseAdmin(event).from('orders').select(sellerOrderFields).order('created_at', { ascending: false })
   if (onHold) query = query.not('issue_reported_at', 'is', null).is('issue_resolved_at', null)
   return query
 }
 
 export function getAdminOrder(event: H3Event, orderId: string) {
-  return getSupabaseAdmin(event).from('orders').select(`${orderFields},payments(*),payouts(*)`).eq('id', orderId).single()
+  return getSupabaseAdmin(event).from('orders').select(`${sellerOrderFields},payments(*),payouts(*),refunds(*)`).eq('id', orderId).single()
 }
 
-export function updateAdminOrder(event: H3Event, orderId: string, values: Record<string, unknown>) {
-  return getSupabaseAdmin(event).from('orders').update(values).eq('id', orderId).select(orderFields).single()
+// Conditional: only an unresolved on-hold order in one of `statuses` changes. 0 rows (PGRST116) → already resolved or wrong status.
+export function resolveAdminOrder(event: H3Event, orderId: string, statuses: string[], values: Record<string, unknown>) {
+  return getSupabaseAdmin(event).from('orders').update(values).eq('id', orderId)
+    .not('issue_reported_at', 'is', null).is('issue_resolved_at', null).in('status', statuses)
+    .select(sellerOrderFields).single()
+}
+
+export function cancelActiveOrderItems(event: H3Event, orderId: string) {
+  return getSupabaseAdmin(event).from('order_items').update({ item_status: 'cancelled', cancelled_at: new Date().toISOString() }).eq('order_id', orderId).eq('item_status', 'active')
 }
 
 export function getOrderForBuyerCheckout(event: H3Event, buyerId: string, orderId: string) {
@@ -188,5 +195,5 @@ export async function countActiveOrderItems(event: H3Event, orderId: string, exc
 }
 
 export function insertRefund(event: H3Event, values: { order_id: string; order_item_id: string | null; refund_type: string; item_amount_refunded: number; platform_fee_refunded: number; total_refund_amount: number }) {
-  return getSupabaseAdmin(event).from('refunds').insert({ ...values, channel_fee_refunded: 0, status: 'pending_transfer' }).select('id').single()
+  return getSupabaseAdmin(event).from('refunds').insert({ ...values, channel_fee_refunded: 0, status: 'pending_transfer' }).select('*').single()
 }
