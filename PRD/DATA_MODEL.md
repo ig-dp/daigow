@@ -31,6 +31,10 @@ Separate table so bank details get stricter RLS than the public profile.
 | bank_code | string | Xendit channel code |
 | account_number | string | |
 | account_holder_name | string | |
+| city | string | Required by Xendit Payouts v3 recipient address |
+| street_line_1 | string | Required by Xendit Payouts v3 recipient address |
+| province_state | string, nullable | Recipient province/state |
+| postal_code | string, nullable | Recipient postal code |
 | updated_at | timestamp | |
 
 ### Trip

@@ -417,7 +417,7 @@ test('payout request uses the seller bank snapshot and stable external id', () =
   assert.deepStrictEqual(buildPayoutRequest({
     externalId: 'payout-order-1-1',
     amount: 975000,
-    account: { bank_code: 'BCA', account_number: '1234567890', account_holder_name: 'Dian Muse' },
+    account: { bank_code: 'BCA', account_number: '1234567890', account_holder_name: 'Dian Muse', city: 'Makassar', street_line_1: 'Jl. Pengayoman No. 10' },
     description: 'Daigow payout order-1',
     email: 'seller@example.com'
   }), {
@@ -428,7 +428,7 @@ test('payout request uses the seller bank snapshot and stable external id', () =
       surname: 'Muse',
       relationship: 'SUPPLIER',
       details: { personal_email: 'seller@example.com' },
-      address: { country: 'ID' },
+      address: { country: 'ID', city: 'Makassar', street_line_1: 'Jl. Pengayoman No. 10' },
       account_details: {
         currency: 'IDR',
         account_country: 'ID',

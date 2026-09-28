@@ -13,7 +13,13 @@ export function buildPayoutRequest({ externalId, amount, account, description, e
   const channel = PAYOUT_CHANNELS[String(account.bank_code ?? '').toUpperCase()]
   if (!channel) throw new Error(`Unsupported payout channel: ${account.bank_code}`)
   const name = splitName(account.account_holder_name)
-  const address = { country: account.account_country ?? 'ID' }
+  const address = {
+    country: account.account_country ?? 'ID',
+    city: account.city,
+    street_line_1: account.street_line_1,
+    ...(account.province_state ? { province_state: account.province_state } : {}),
+    ...(account.postal_code ? { postal_code: account.postal_code } : {})
+  }
   const recipient = {
     type: 'INDIVIDUAL',
     ...name,
