@@ -9,6 +9,10 @@ export function findPaymentByRequestId(event: H3Event, requestId: string) {
   return getSupabaseAdmin(event).from('payments').select('*,orders!inner(id,status)').eq('xendit_payment_request_id', requestId).single()
 }
 
+export function findPaymentByOrderId(event: H3Event, orderId: string) {
+  return getSupabaseAdmin(event).from('payments').select('*,orders!inner(id,status)').eq('order_id', orderId).eq('status', 'pending').order('created_at', { ascending: false }).limit(1).maybeSingle()
+}
+
 export function updatePayment(event: H3Event, paymentId: string, values: Record<string, unknown>) {
   return getSupabaseAdmin(event).from('payments').update(values).eq('id', paymentId).select('*').single()
 }

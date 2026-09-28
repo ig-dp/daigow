@@ -3,6 +3,7 @@ import { apiError } from "../../utils/api-error";
 import {
   insertWebhookEvent,
   findPaymentByRequestId,
+  findPaymentByOrderId,
   updatePayment,
 } from "../../repositories/payment.repository";
 import { transitionOrderToProcessing } from "../../repositories/order.repository";
@@ -18,18 +19,20 @@ export default defineEventHandler(async (event) => {
   const eventType = body.event_type ?? body.event ?? "payment";
   const payload = body.data ?? body;
   const requestId = payload.payment_request_id ?? body.payment_request_id;
-  const status = payload.status ?? body.status ?? (eventType === "payment.capture" ? "SUCCEEDED" : eventType === "payment.failure" ? "FAILED" : eventType === "payment_request.expiry" ? "EXPIRED" : undefined);
-  const eventId = body.event_id ?? body.id ?? [eventType, requestId, payload.payment_id ?? payload.updated ?? payload.created ?? body.created].filter(Boolean).join(":");
+  const sessionId = payload.payment_session_id ?? body.payment_session_id;
+  const referenceId = payload.reference_id ?? body.reference_id;
+  const status = payload.status ?? body.status ?? (eventType === "payment.capture" || eventType === "payment_session.completed" ? "SUCCEEDED" : eventType === "payment.failure" ? "FAILED" : eventType === "payment_request.expiry" || eventType === "payment_session.expired" ? "EXPIRED" : undefined);
+  const eventId = body.event_id ?? body.id ?? [eventType, requestId ?? sessionId ?? referenceId, payload.payment_id ?? payload.updated ?? payload.created ?? body.created].filter(Boolean).join(":");
   if (
     typeof eventId !== "string" ||
     !eventId ||
-    typeof requestId !== "string" ||
-    !requestId
+    typeof (requestId ?? sessionId ?? referenceId) !== "string" ||
+    !(requestId ?? sessionId ?? referenceId)
   )
     throw apiError(
       400,
       "INVALID_INPUT",
-      "Webhook event_id and payment_request_id are required",
+      "Webhook payment identifier is required",
     );
 
   const eventResult = await insertWebhookEvent(event, {
@@ -42,10 +45,9 @@ export default defineEventHandler(async (event) => {
     throw apiError(500, "INTERNAL_ERROR", "Failed to record webhook event");
   if (eventResult.duplicate) return { received: true, duplicate: true };
 
-  const { data: payment, error: paymentError } = await findPaymentByRequestId(
-    event,
-    requestId,
-  );
+  let paymentResult = requestId ? await findPaymentByRequestId(event, requestId) : { data: null, error: null };
+  if ((!paymentResult.data || paymentResult.error?.code === 'PGRST116') && referenceId) paymentResult = await findPaymentByOrderId(event, referenceId);
+  const { data: payment, error: paymentError } = paymentResult;
   if (paymentError?.code === "PGRST116" || !payment) return { received: true };
   if (paymentError)
     throw apiError(500, "INTERNAL_ERROR", "Failed to load payment");
@@ -55,6 +57,7 @@ export default defineEventHandler(async (event) => {
       const { error } = await updatePayment(event, payment.id, {
         status: "paid",
         paid_at: payload.paid_at ?? new Date().toISOString(),
+        ...(requestId ? { xendit_payment_request_id: requestId } : {}),
       });
       if (error)
         throw apiError(500, "INTERNAL_ERROR", "Failed to update payment");
