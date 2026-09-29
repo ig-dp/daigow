@@ -87,10 +87,25 @@
 
           <section v-if="order.status === 'processing' && !onHold" class="rounded-lg border border-border bg-white p-5 sm:p-6" aria-labelledby="shipping-form-title">
             <h2 id="shipping-form-title" class="text-lg font-semibold">Kirim Pesanan</h2>
-            <p class="mt-1 text-sm text-muted">Isi nomor resi atau URL bukti pengiriman. Minimal salah satu wajib diisi.</p>
+            <p class="mt-1 text-sm text-muted">Isi nomor resi atau lampirkan foto/link bukti pengiriman. Minimal salah satu wajib diisi.</p>
             <form class="mt-4 space-y-4" novalidate @submit.prevent="shipOrder">
               <div><label class="seller-form-label" for="tracking-number">Nomor Resi</label><input id="tracking-number" v-model="trackingNumber" class="seller-form-input" type="text" autocomplete="off" placeholder="Contoh: JNE1234567890"></div>
-              <div><label class="seller-form-label" for="shipping-evidence">URL Bukti Pengiriman</label><input id="shipping-evidence" v-model="evidenceUrl" class="seller-form-input" type="url" inputmode="url" placeholder="https://..."></div>
+              <fieldset class="space-y-3">
+                <legend class="seller-form-label">Bukti Pengiriman</legend>
+                <div class="flex flex-wrap gap-2" role="tablist" aria-label="Jenis bukti pengiriman">
+                  <button type="button" class="rounded-md border px-3 py-2 text-sm font-medium" :class="evidenceMode === 'photo' ? 'border-brand bg-brand text-white' : 'border-border bg-white'" @click="evidenceMode = 'photo'">Upload Foto</button>
+                  <button type="button" class="rounded-md border px-3 py-2 text-sm font-medium" :class="evidenceMode === 'link' ? 'border-brand bg-brand text-white' : 'border-border bg-white'" @click="evidenceMode = 'link'">Masukkan Link</button>
+                </div>
+                <div v-if="evidenceMode === 'photo'">
+                  <input id="shipping-photo" class="seller-form-input" type="file" accept="image/jpeg,image/png,image/webp" @change="selectShippingPhoto">
+                  <p class="mt-1 text-xs text-muted">JPG, PNG, atau WebP. Maksimal 5 MB.</p>
+                  <p v-if="shippingPhotoName" class="mt-1 text-sm text-muted">{{ shippingPhotoName }}</p>
+                </div>
+                <div v-else>
+                  <label class="sr-only" for="shipping-evidence">URL Bukti Pengiriman</label>
+                  <input id="shipping-evidence" v-model="evidenceUrl" class="seller-form-input" type="url" inputmode="url" placeholder="https://...">
+                </div>
+              </fieldset>
               <p v-if="shippingError" class="text-sm text-red-700" role="alert">{{ shippingError }}</p>
               <button type="submit" class="min-h-11 rounded-md bg-brand px-5 text-sm font-semibold text-white hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50" :disabled="working">{{ working ? 'Menyimpan...' : 'Tandai Dikirim' }}</button>
             </form>
@@ -160,6 +175,8 @@ type Refund = { id: string; refund_type: string; status: string; total_refund_am
 
 const route = useRoute()
 const orderId = String(route.params.id)
+const user = useSupabaseUser()
+const supabase = useSupabaseClient()
 const { data, pending, error: loadError, refresh } = await useFetch(`/api/seller/orders/${orderId}`)
 const order = computed(() => data.value?.order as Order | undefined)
 useHead({ title: () => order.value?.order_number ?? 'Detail Pesanan' })
@@ -185,6 +202,9 @@ const safeEvidenceUrl = computed(() => {
 })
 const trackingNumber = ref('')
 const evidenceUrl = ref('')
+const evidenceMode = ref<'photo' | 'link'>('photo')
+const shippingPhoto = ref<File | null>(null)
+const shippingPhotoName = computed(() => shippingPhoto.value?.name ?? '')
 const shippingError = ref('')
 const actionError = ref('')
 const working = ref(false)
@@ -193,6 +213,12 @@ const dialogMode = ref<'reject' | 'cancel_item' | 'mark_delivered' | null>(null)
 const selectedItem = ref<OrderItem | null>(null)
 const rejectReason = ref('')
 const dialogError = ref('')
+
+function selectShippingPhoto(event: Event) {
+  const input = event.target as HTMLInputElement
+  shippingPhoto.value = input.files?.[0] ?? null
+  shippingError.value = ''
+}
 
 const formatCurrency = (value: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
 const formatDate = (value: string) => new Intl.DateTimeFormat('id-ID', { dateStyle: 'long' }).format(new Date(value))
@@ -266,7 +292,24 @@ async function submitDialog() {
 async function shipOrder() {
   shippingError.value = ''
   const tracking_number = trackingNumber.value.trim()
-  const shipping_evidence_url = evidenceUrl.value.trim()
+  let shipping_evidence_url = evidenceMode.value === 'link' ? evidenceUrl.value.trim() : ''
+  if (evidenceMode.value === 'photo' && shippingPhoto.value) {
+    if (shippingPhoto.value.size > 5 * 1024 * 1024) { shippingError.value = 'Ukuran foto maksimal 5 MB.'; return }
+    try {
+      const sellerId = user.value?.id ?? user.value?.sub
+      if (!sellerId) throw new Error('Sesi seller tidak tersedia.')
+      const extension = shippingPhoto.value.type === 'image/png' ? 'png' : shippingPhoto.value.type === 'image/webp' ? 'webp' : 'jpg'
+      const path = `${sellerId}/${orderId}/${crypto.randomUUID()}.${extension}`
+      const { error } = await supabase.storage.from('shipping-proof').upload(path, shippingPhoto.value, { contentType: shippingPhoto.value.type, upsert: false })
+      if (error) throw error
+      shipping_evidence_url = supabase.storage.from('shipping-proof').getPublicUrl(path).data.publicUrl
+    } catch (error) {
+      console.error('Shipping proof upload failed:', error)
+      const detail = error instanceof Error ? error.message : ''
+      shippingError.value = detail ? `Foto gagal diunggah: ${detail}` : 'Foto bukti pengiriman gagal diunggah. Pastikan bucket Storage sudah disiapkan.'
+      return
+    }
+  }
   if (!tracking_number && !shipping_evidence_url) { shippingError.value = 'Isi nomor resi atau URL bukti pengiriman.'; return }
   if (shipping_evidence_url) {
     try {
