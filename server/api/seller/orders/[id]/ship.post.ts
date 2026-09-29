@@ -12,6 +12,22 @@ export default defineEventHandler(async (event) => {
   const hasEvidence = typeof body.shipping_evidence_url === 'string' && body.shipping_evidence_url.length > 0
   const hasTracking = typeof body.tracking_number === 'string' && body.tracking_number.length > 0
   if (!hasEvidence && !hasTracking) throw apiError(400, 'INVALID_INPUT', 'shipping_evidence_url or tracking_number is required')
+  if (hasEvidence) {
+    try {
+      const url = new URL(body.shipping_evidence_url)
+      if (!['http:', 'https:'].includes(url.protocol)) throw new Error('Unsupported URL')
+    } catch {
+      throw apiError(400, 'INVALID_INPUT', 'shipping_evidence_url must be a valid http(s) URL')
+    }
+  }
+  if (hasEvidence) {
+    try {
+      const url = new URL(body.shipping_evidence_url)
+      if (!['http:', 'https:'].includes(url.protocol)) throw new Error('Unsupported URL')
+    } catch {
+      throw apiError(400, 'INVALID_INPUT', 'shipping_evidence_url must be a valid http(s) URL')
+    }
+  }
   const { data: order, error: findError } = await getOwnedOrder(event, seller.id, orderId)
   if (findError?.code === 'PGRST116' || !order) throw apiError(404, 'ORDER_NOT_FOUND', 'Order not found')
   if (findError) throw apiError(500, 'INTERNAL_ERROR', 'Failed to load order')

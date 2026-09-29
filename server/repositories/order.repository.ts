@@ -3,8 +3,8 @@ import { randomBytes } from 'node:crypto'
 import { getSupabaseAdmin } from '../utils/supabase-admin'
 import { COMMISSION_RATE, PLATFORM_FEE_RATE } from '../utils/fees'
 
-const orderFields = 'id,order_number,trip_id,buyer_id,buyer_name,buyer_email,buyer_phone,shipping_address,tracking_token,status,confirmation_deadline,subtotal_amount,platform_fee_amount,total_amount,created_at,order_items(id,product_id,variant_id,quantity,unit_price,line_total,product_name_snapshot,category_snapshot,variant_name_snapshot,snapshot_photo_url,item_status)'
-const sellerOrderFields = `${orderFields},confirmed_at,payment_deadline,paid_at,cancellation_reason,cancelled_by,shipping_evidence_url,tracking_number,shipped_at,delivered_at,delivered_by,auto_complete_at,completed_at,completed_by,issue_reported_at,issue_note,issue_resolved_at,issue_resolution,platform_fee_rate_snapshot,commission_rate_snapshot,channel_fee_amount,settled_at`
+const orderFields = 'id,order_number,trip_id,buyer_id,buyer_name,buyer_email,buyer_phone,shipping_address,tracking_token,status,confirmation_deadline,tracking_number,shipping_evidence_url,shipped_at,subtotal_amount,platform_fee_amount,total_amount,created_at,order_items(id,product_id,variant_id,quantity,unit_price,line_total,product_name_snapshot,category_snapshot,variant_name_snapshot,snapshot_photo_url,item_status)'
+const sellerOrderFields = `${orderFields},confirmed_at,payment_deadline,paid_at,cancellation_reason,cancelled_by,delivered_at,delivered_by,auto_complete_at,completed_at,completed_by,issue_reported_at,issue_note,issue_resolved_at,issue_resolution,platform_fee_rate_snapshot,commission_rate_snapshot,channel_fee_amount,settled_at`
 
 export type OrderItemInput = { product_id: string; variant_id?: string; quantity: number }
 export type OrderInsertValues = {
