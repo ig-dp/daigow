@@ -86,7 +86,7 @@ const NAV_LINKS = [
   { to: '/seller/dashboard', label: 'Dashboard', icon: 'material-symbols:dashboard-outline-rounded' },
   { to: '/seller/orders', label: 'Pesanan', icon: 'material-symbols:receipt-long-outline-rounded', requiresTrip: true },
   { to: '/seller/products', label: 'Produk', icon: 'material-symbols:inventory-2-outline-rounded', requiresTrip: true },
-  { to: '/seller/store', label: 'Toko', icon: 'material-symbols:storefront-outline-rounded' },
+  { to: '/seller/payout-account', label: 'Payout', icon: 'material-symbols:account-balance-wallet-outline-rounded' },
   { to: '/seller/profile', label: 'Profil', icon: 'material-symbols:person-outline-rounded' }
 ]
 

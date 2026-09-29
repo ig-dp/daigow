@@ -5,7 +5,7 @@ import { apiError } from './api-error'
 import { getSupabaseAdmin } from './supabase-admin'
 
 export async function requireOrderAccess(event: H3Event, orderId: string) {
-  const user = await serverSupabaseUser(event)
+  const user = await serverSupabaseUser(event).catch(() => null)
   const token = getHeader(event, 'x-tracking-token')
   const query = getSupabaseAdmin(event).from('orders').select('*').eq('id', orderId)
   const { data, error } = user?.sub

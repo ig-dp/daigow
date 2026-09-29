@@ -77,7 +77,8 @@ export default defineEventHandler(async (event) => {
   })
   if (error || !data) { console.error('insertOrder failed:', error?.message); throw apiError(500, 'INTERNAL_ERROR', 'Failed to create order') }
 
-  sendEmail(body.buyer_email, 'Pesanan diterima', `Lacak pesanan Anda: /orders/track/${data.tracking_token}`)
+  const appUrl = process.env.PUBLIC_APP_URL || 'http://localhost:3000'
+  sendEmail(body.buyer_email, 'Pesanan diterima', `Lacak pesanan Anda: ${appUrl}/orders/track/${data.tracking_token}`).catch((error) => console.error('order email failed:', error))
 
   return { order_id: data.id, tracking_token: data.tracking_token }
 })

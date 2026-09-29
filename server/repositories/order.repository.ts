@@ -150,6 +150,10 @@ export function transitionOrderToProcessing(event: H3Event, orderId: string) {
   return getSupabaseAdmin(event).from('orders').update({ status: 'processing' }).eq('id', orderId).eq('status', 'awaiting_payment').select('id,status').single()
 }
 
+export function updateOrderPaidAt(event: H3Event, orderId: string, paidAt: string) {
+  return getSupabaseAdmin(event).from('orders').update({ paid_at: paidAt }).eq('id', orderId).select('id,paid_at').single()
+}
+
 export function updateOrderStatus(event: H3Event, orderId: string, values: Record<string, unknown>, expectedStatus?: string, blockOnHold = false) {
   let query = getSupabaseAdmin(event).from('orders').update(values).eq('id', orderId)
   if (expectedStatus) query = query.eq('status', expectedStatus)

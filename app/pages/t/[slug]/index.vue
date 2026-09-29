@@ -97,7 +97,7 @@
         <div class="flex items-center justify-between border-b border-border px-6 py-5"><h2 id="cart-title" class="text-xl font-semibold">Keranjang <span class="text-sm font-normal text-muted">({{ cartCount }})</span></h2><button type="button" autofocus class="text-2xl leading-none text-muted hover:text-ink" aria-label="Tutup keranjang" @click="cartOpen = false">×</button></div>
         <div v-if="!cart.length" class="flex-1 px-6 py-10 text-sm text-muted">Keranjang masih kosong. Pilih produk dari katalog Trip ini.</div>
         <ul v-else class="flex-1 divide-y divide-border overflow-y-auto px-6"><li v-for="item in cart" :key="cartKey(item)" class="flex gap-3 py-4"><img v-if="firstPhoto(item.product)" :src="firstPhoto(item.product)" :alt="item.product.name" class="size-16 shrink-0 rounded-lg object-cover"><div class="min-w-0 flex-1"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><p class="text-sm font-semibold leading-snug">{{ item.product.name }}</p><p v-if="item.variant" class="mt-1 text-xs text-muted">{{ item.variant.name }}</p><p class="mt-1 text-sm font-semibold tabular-nums text-brand">{{ formatCurrency(itemPrice(item)) }} <span v-if="item.quantity > 1" class="font-normal text-muted">× {{ item.quantity }}</span></p></div><button type="button" class="shrink-0 text-xs text-red-600 hover:underline" @click="removeItem(item)">Hapus</button></div><div class="mt-3 flex items-center gap-3"><button type="button" class="grid size-8 place-items-center rounded border border-border" :aria-label="`Kurangi ${item.product.name}`" @click="changeQuantity(item, -1)">−</button><span class="text-sm tabular-nums">{{ item.quantity }}</span><button type="button" class="grid size-8 place-items-center rounded border border-border" :aria-label="`Tambah ${item.product.name}`" @click="changeQuantity(item, 1)">+</button></div></div></li></ul>
-        <div v-if="cart.length" class="border-t border-border px-6 py-5"><dl class="space-y-2 text-sm"><div class="flex justify-between gap-3"><dt class="text-muted">Subtotal</dt><dd class="tabular-nums">{{ formatCurrency(cartSubtotal) }}</dd></div><div class="flex justify-between gap-3"><dt class="text-muted">Komisi (3%)</dt><dd class="tabular-nums">{{ formatCurrency(cartCommission) }}</dd></div><div class="flex justify-between gap-3 border-t border-border pt-3 font-semibold"><dt>Total</dt><dd class="tabular-nums">{{ formatCurrency(cartTotal) }}</dd></div></dl><button type="button" class="mt-4 min-h-12 w-full rounded-lg bg-brand px-4 text-sm font-semibold text-white hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-brand" @click="checkoutMessage = 'Checkout buyer akan segera tersedia.'">Lanjut ke Checkout</button><p v-if="checkoutMessage" class="mt-2 text-center text-xs text-muted" role="status">{{ checkoutMessage }}</p></div>
+        <div v-if="cart.length" class="border-t border-border px-6 py-5"><dl class="space-y-2 text-sm"><div class="flex justify-between gap-3"><dt class="text-muted">Subtotal</dt><dd class="tabular-nums">{{ formatCurrency(cartSubtotal) }}</dd></div><div class="flex justify-between gap-3"><dt class="text-muted">Biaya platform (1,5%)</dt><dd class="tabular-nums">{{ formatCurrency(cartPlatformFee) }}</dd></div><div class="flex justify-between gap-3 border-t border-border pt-3 font-semibold"><dt>Total sementara</dt><dd class="tabular-nums">{{ formatCurrency(cartTotal) }}</dd></div></dl><button type="button" class="mt-4 min-h-12 w-full rounded-lg bg-brand px-4 text-sm font-semibold text-white hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-brand" @click="navigateTo(`/t/${slug}/checkout`)">Lanjut ke Checkout</button></div>
       </section>
     </div>
   </main>
@@ -130,7 +130,6 @@ const selectedCategories = ref<string[]>([])
 const visibleCount = ref(18)
 const cart = ref<CartItem[]>([])
 const cartOpen = ref(false)
-const checkoutMessage = ref('')
 const chosenProduct = ref<PublicProduct | null>(null)
 const selectedVariantId = ref('')
 
@@ -156,8 +155,8 @@ const visibleProducts = computed(() => filteredProducts.value.slice(0, visibleCo
 const hasMore = computed(() => filteredProducts.value.length > visibleCount.value)
 const cartCount = computed(() => cart.value.reduce((total, item) => total + item.quantity, 0))
 const cartSubtotal = computed(() => cart.value.reduce((total, item) => total + itemPrice(item) * item.quantity, 0))
-const cartCommission = computed(() => Math.round(cartSubtotal.value * 0.03))
-const cartTotal = computed(() => cartSubtotal.value + cartCommission.value)
+const cartPlatformFee = computed(() => Math.round(cartSubtotal.value * 0.015))
+const cartTotal = computed(() => cartSubtotal.value + cartPlatformFee.value)
 const cartStorageKey = `daigow-cart:${slug}`
 onMounted(() => {
   try {
