@@ -22,7 +22,7 @@ Signup/login via Supabase Auth client SDK.
 | Method & Path | Auth | Purpose |
 |---|---|---|
 | `GET /api/me` | Any session | Current profile incl. role |
-| `PATCH /api/me` | Any session | Update name, phone (never `role`) |
+| `PATCH /api/me` | Any session | Update name, phone, address (never `role`) |
 | `POST /api/me/become-jastiper` | Session with `role = buyer` | Body `{ code }`. Constant-time compare with `JASTIPER_INVITE_CODE`; on match sets `role = jastiper`. Wrong code → 403 `INVALID_INVITE_CODE`. Already Jastiper/admin → 409. Rate limit: 5 attempts per user per hour → 429 |
 | `GET /api/seller/payout-account` | Jastiper | Read own payout account |
 | `PUT /api/seller/payout-account` | Jastiper | Upsert `bank_code`, `account_number`, `account_holder_name` |

@@ -45,7 +45,7 @@
 import AppSelect from '~/components/ui/AppSelect.vue'
 import { tripSelectOption } from '~/composables/useTripStatus'
 import { useSelectedTrip } from '~/composables/useSelectedTrip'
-import { ORDER_STATUS } from '~/utils/seller-order-status.mjs'
+import { ORDER_STATUS, ORDER_STATUS_CLASS } from '~/utils/seller-order-status.mjs'
 
 definePageMeta({ middleware: 'seller', layout: 'seller' })
 useHead({ title: 'Pesanan' })
@@ -55,18 +55,8 @@ const STATUS_TABS = [
   ...Object.entries(ORDER_STATUS).map(([value, meta]) => ({ value, label: meta.label }))
 ]
 
-const STATUS_CLASS: Record<string, string> = {
-  awaiting_confirmation: 'bg-amber-100 text-amber-800',
-  awaiting_payment: 'bg-amber-100 text-amber-800',
-  processing: 'bg-blue-100 text-blue-800',
-  shipped: 'bg-violet-100 text-violet-800',
-  delivered: 'bg-sky-100 text-sky-800',
-  completed: 'bg-green-100 text-green-800',
-  cancelled: 'bg-red-100 text-red-800'
-}
-
 function statusMeta(status: string) {
-  return { label: ORDER_STATUS[status as keyof typeof ORDER_STATUS]?.label ?? status, class: STATUS_CLASS[status] ?? 'bg-gray-100 text-gray-800' }
+  return { label: ORDER_STATUS[status as keyof typeof ORDER_STATUS]?.label ?? status, class: ORDER_STATUS_CLASS[status as keyof typeof ORDER_STATUS_CLASS] ?? 'bg-gray-100 text-gray-800' }
 }
 
 const status = ref('')

@@ -63,6 +63,16 @@ onMounted(async () => {
   } catch { cart.value = [] }
 })
 
+// Logged-in buyers: prefill from the profile.
+onMounted(async () => {
+  if (!useSupabaseUser().value) return
+  const me = await $fetch<{ profile: { name: string; email: string; phone: string | null; address: string | null } }>('/api/me').catch(() => null)
+  form.buyer_name ||= me?.profile.name ?? ''
+  form.buyer_email ||= me?.profile.email ?? ''
+  form.buyer_phone ||= me?.profile.phone ?? ''
+  form.shipping_address ||= me?.profile.address ?? ''
+})
+
 function validate() {
   Object.keys(fieldErrors).forEach(key => delete fieldErrors[key])
   if (!form.buyer_name.trim()) fieldErrors.buyer_name = 'Nama wajib diisi.'

@@ -18,6 +18,7 @@
 | name | string | |
 | email | string | |
 | phone | string, nullable | |
+| address | string, nullable | Default shipping address, prefills checkout |
 | role | enum: `buyer`, `jastiper`, `admin` | Default `buyer`. `jastiper` via invite code (`POST /api/me/become-jastiper`); `admin` set manually in Supabase. Users must never be able to update their own `role` from the client |
 | created_at | timestamp | |
 

@@ -1,7 +1,7 @@
 <template>
   <div class="auth-canvas">
     <AppLogo />
-    <NuxtLink to="/seller" class="inline-flex justify-center items-center gap-2 bg-brand hover:bg-brand-hover px-6 rounded-md w-full max-w-xs min-h-12 font-semibold text-white text-sm focus-visible:outline-2 focus-visible:outline-brand focus-visible:outline-offset-2">
+    <NuxtLink to="/login" class="inline-flex justify-center items-center gap-2 bg-brand hover:bg-brand-hover px-6 rounded-md w-full max-w-xs min-h-12 font-semibold text-white text-sm focus-visible:outline-2 focus-visible:outline-brand focus-visible:outline-offset-2">
       <Icon name="material-symbols:storefront-outline-rounded" class="text-xl" aria-hidden="true" />
       Masuk sebagai Penjual
     </NuxtLink>

@@ -32,7 +32,16 @@
         >
           Trip Saya
         </h2>
-        <div class="space-y-4">
+        <div v-if="!dashboard?.trips?.length" class="flex flex-col items-center gap-4 rounded-xl border border-dashed border-border px-6 py-14 text-center">
+          <span class="flex size-12 items-center justify-center rounded-full bg-brand/10 text-brand" aria-hidden="true">
+            <Icon name="material-symbols:flight-takeoff-rounded" class="text-2xl" />
+          </span>
+          <p class="font-semibold text-ink">Belum ada trip</p>
+          <NuxtLink to="/seller/trips/new" class="inline-flex min-h-11 items-center gap-2 rounded-md bg-brand px-4 text-sm font-semibold text-white hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
+            <span aria-hidden="true" class="text-base font-normal leading-none">+</span> Buat Trip Pertama
+          </NuxtLink>
+        </div>
+        <div v-else class="space-y-4">
           <article
             v-for="trip in dashboard?.trips ?? []"
             :key="trip.id"

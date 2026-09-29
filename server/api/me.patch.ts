@@ -3,7 +3,7 @@ import { apiError } from '../utils/api-error'
 import { requireUser } from '../utils/auth'
 import { updateProfile } from '../repositories/profile.repository'
 
-const ALLOWED_KEYS = new Set(['name', 'phone'])
+const ALLOWED_KEYS = new Set(['name', 'phone', 'address'])
 
 export default defineEventHandler(async (event) => {
   const user = await requireUser(event)
@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
     if (!ALLOWED_KEYS.has(key)) throw apiError(400, 'INVALID_INPUT', `Unknown field: ${key}`)
   }
 
-  const values: { name?: string; phone?: string | null } = {}
+  const values: { name?: string; phone?: string | null; address?: string | null } = {}
 
   if ('name' in body) {
     if (typeof body.name !== 'string' || body.name.length === 0) {
@@ -33,8 +33,15 @@ export default defineEventHandler(async (event) => {
     values.phone = body.phone
   }
 
+  if ('address' in body) {
+    if (body.address !== null && typeof body.address !== 'string') {
+      throw apiError(400, 'INVALID_INPUT', 'address must be a string or null')
+    }
+    values.address = body.address
+  }
+
   if (Object.keys(values).length === 0) {
-    throw apiError(400, 'INVALID_INPUT', 'At least one of name or phone is required')
+    throw apiError(400, 'INVALID_INPUT', 'At least one of name, phone or address is required')
   }
 
   const { data, error } = await updateProfile(event, user.id, values)

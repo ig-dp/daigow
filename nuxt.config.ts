@@ -20,6 +20,10 @@ export default defineNuxtConfig({
   vite: {
     plugins: [tailwindcss()]
   },
+  // Old seller login URL; login now lives at /login.
+  routeRules: {
+    '/seller': { redirect: '/seller/dashboard' }
+  },
   nitro: {
     errorHandler: '../server/error.ts'
   },
@@ -34,7 +38,6 @@ export default defineNuxtConfig({
     xenditWebhookToken: '',
     geminiApiKey: '',
     resendApiKey: '',
-    cronSecret: '',
-    jastiperInviteCode: ''
+    cronSecret: ''
   }
 })

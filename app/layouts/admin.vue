@@ -84,7 +84,8 @@ const profileOpen = ref(false)
 const user = useSupabaseUser()
 const supabase = useSupabaseClient()
 
-const displayName = computed(() => user.value?.user_metadata?.name || 'Admin')
+const { data: me } = await useFetch('/api/me', { key: 'me' })
+const displayName = computed(() => me.value?.profile?.name || 'Admin')
 const initials = computed(() => displayName.value.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase())
 
 watch(() => route.path, () => { menuOpen.value = false; profileOpen.value = false })

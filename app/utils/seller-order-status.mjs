@@ -8,6 +8,16 @@ export const ORDER_STATUS = {
   cancelled: { label: 'Dibatalkan', tone: 'red', description: 'Pesanan telah dibatalkan dan tidak dapat diproses lagi.' }
 }
 
+export const ORDER_STATUS_CLASS = {
+  awaiting_confirmation: 'bg-amber-100 text-amber-800',
+  awaiting_payment: 'bg-amber-100 text-amber-800',
+  processing: 'bg-blue-100 text-blue-800',
+  shipped: 'bg-violet-100 text-violet-800',
+  delivered: 'bg-sky-100 text-sky-800',
+  completed: 'bg-green-100 text-green-800',
+  cancelled: 'bg-red-100 text-red-800'
+}
+
 export function sellerOrderActions(status, onHold = false) {
   if (onHold) return []
   if (status === 'awaiting_confirmation') return ['confirm', 'reject']

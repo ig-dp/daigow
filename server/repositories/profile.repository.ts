@@ -1,7 +1,7 @@
 import type { H3Event } from 'h3'
 import { getSupabaseAdmin } from '../utils/supabase-admin'
 
-const profileFields = 'id,name,email,phone,role,created_at'
+const profileFields = 'id,name,email,phone,address,role,created_at'
 
 export function getProfile(event: H3Event, userId: string) {
   return getSupabaseAdmin(event)
@@ -14,7 +14,7 @@ export function getProfile(event: H3Event, userId: string) {
 export function updateProfile(
   event: H3Event,
   userId: string,
-  values: { name?: string; phone?: string | null }
+  values: { name?: string; phone?: string | null; address?: string | null }
 ) {
   return getSupabaseAdmin(event)
     .from('profiles')

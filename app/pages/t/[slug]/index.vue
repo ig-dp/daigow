@@ -8,10 +8,15 @@
           <svg class="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg>
           <input v-model="search" type="search" class="h-11 w-full rounded-lg bg-[#f0f1ee] pl-11 pr-4 text-sm outline-none ring-brand/40 placeholder:text-muted focus:ring-2" placeholder="Cari produk di Trip ini...">
         </label>
-        <button v-if="trip && trip.status !== 'coming_soon'" type="button" class="ml-auto inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-brand hover:bg-[#f0f1ee] focus-visible:outline-2 focus-visible:outline-brand sm:ml-0" @click="cartOpen = true">
-          <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 4h2l2.3 11h11.5l2.2-8H6"/><circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg>
-          <span class="hidden sm:inline">Keranjang</span><span v-if="cartCount" class="grid size-5 place-items-center rounded-full bg-brand text-[11px] text-white">{{ cartCount }}</span>
-        </button>
+        <div class="ml-auto flex items-center gap-1" :class="{ 'sm:ml-0': trip?.status !== 'coming_soon' }">
+          <button v-if="trip && trip.status !== 'coming_soon'" type="button" class="relative inline-flex size-11 items-center justify-center rounded-lg text-brand hover:bg-[#f0f1ee] focus-visible:outline-2 focus-visible:outline-brand" :aria-label="cartCount ? `Keranjang, ${cartCount} item` : 'Keranjang'" title="Keranjang" @click="cartOpen = true">
+            <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 4h2l2.3 11h11.5l2.2-8H6"/><circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg>
+            <span v-if="cartCount" class="absolute right-0.5 top-0.5 grid min-w-5 h-5 place-items-center rounded-full bg-brand px-1 text-[11px] font-semibold text-white" aria-hidden="true">{{ cartCount }}</span>
+          </button>
+          <NuxtLink :to="user ? '/account' : '/login'" class="inline-flex size-11 items-center justify-center rounded-lg text-brand hover:bg-[#f0f1ee] focus-visible:outline-2 focus-visible:outline-brand" :aria-label="user ? 'Profil' : 'Masuk'" :title="user ? 'Profil' : 'Masuk'">
+            <Icon name="material-symbols:person-outline-rounded" class="text-xl" aria-hidden="true" />
+          </NuxtLink>
+        </div>
       </div>
     </header>
 
@@ -130,6 +135,7 @@ const selectedCategories = ref<string[]>([])
 const visibleCount = ref(18)
 const cart = ref<CartItem[]>([])
 const cartOpen = ref(false)
+const user = useSupabaseUser()
 const chosenProduct = ref<PublicProduct | null>(null)
 const selectedVariantId = ref('')
 

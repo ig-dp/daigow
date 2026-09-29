@@ -1,5 +1,6 @@
-// Login page only: signed-in sellers go straight to their dashboard.
-export default defineNuxtRouteMiddleware(() => {
-  const user = useSupabaseUser()
-  if (user.value) return navigateTo('/seller/dashboard')
+// Login/register only: signed-in users go to their home (sellers → dashboard, buyers → account).
+export default defineNuxtRouteMiddleware(async () => {
+  if (!useSupabaseUser().value) return
+  const role = await useAdminRole().load()
+  return navigateTo(role === 'jastiper' || role === 'admin' ? '/seller/dashboard' : '/account')
 })

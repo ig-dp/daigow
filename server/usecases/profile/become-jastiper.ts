@@ -1,6 +1,5 @@
 import { timingSafeEqual, createHash } from 'node:crypto'
 import type { H3Event } from 'h3'
-import { useRuntimeConfig } from '#imports'
 import { getProfile, setRole } from '../../repositories/profile.repository'
 import { apiError } from '../../utils/api-error'
 import { consumeInviteAttempt } from '../../utils/invite-rate-limit'
@@ -20,9 +19,11 @@ export async function becomeJastiper(event: H3Event, userId: string, code: strin
     throw apiError(409, 'INVALID_STATE', 'Profile is already a jastiper')
   }
 
+  const expected = process.env.JASTIPER_INVITE_CODE
+  if (!expected) throw apiError(500, 'INTERNAL_ERROR', 'Invite code is not configured')
+
   if (!consumeInviteAttempt(userId)) throw apiError(429, 'RATE_LIMITED', 'Too many invite attempts')
 
-  const expected = useRuntimeConfig(event).jastiperInviteCode
   if (!inviteMatches(code, expected)) throw apiError(403, 'INVALID_INVITE_CODE', 'Invalid invite code')
 
   const { data, error } = await setRole(event, userId, 'jastiper')

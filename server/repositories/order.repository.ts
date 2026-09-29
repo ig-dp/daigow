@@ -1,7 +1,6 @@
 import type { H3Event } from 'h3'
 import { randomBytes } from 'node:crypto'
 import { getSupabaseAdmin } from '../utils/supabase-admin'
-import { COMMISSION_RATE, PLATFORM_FEE_RATE } from '../utils/fees'
 
 const orderFields = 'id,order_number,trip_id,buyer_id,buyer_name,buyer_email,buyer_phone,shipping_address,tracking_token,status,confirmation_deadline,tracking_number,shipping_evidence_url,shipped_at,subtotal_amount,platform_fee_amount,total_amount,created_at,order_items(id,product_id,variant_id,quantity,unit_price,line_total,product_name_snapshot,category_snapshot,variant_name_snapshot,snapshot_photo_url,item_status)'
 const sellerOrderFields = `${orderFields},confirmed_at,payment_deadline,paid_at,cancellation_reason,cancelled_by,delivered_at,delivered_by,auto_complete_at,completed_at,completed_by,issue_reported_at,issue_note,issue_resolved_at,issue_resolution,platform_fee_rate_snapshot,commission_rate_snapshot,channel_fee_amount,settled_at`
@@ -49,9 +48,11 @@ export function getProductsForOrder(event: H3Event, tripId: string, productIds: 
 
 export async function insertOrder(event: H3Event, values: OrderInsertValues) {
   const admin = getSupabaseAdmin(event)
+  const { data: config, error: configError } = await admin.from('platform_config').select('commission_rate,platform_fee_rate').eq('id', 1).single()
+  if (configError || !config) return { data: null, error: configError ?? { message: 'platform_config row missing' } }
   const { items, ...orderValues } = values
   const subtotal_amount = items.reduce((sum, item) => sum + item.line_total, 0)
-  const platform_fee_amount = Math.round(subtotal_amount * PLATFORM_FEE_RATE)
+  const platform_fee_amount = Math.round(subtotal_amount * config.platform_fee_rate)
   const total_amount = subtotal_amount + platform_fee_amount
   const confirmation_deadline = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
   const tracking_token = generateTrackingToken()
@@ -64,9 +65,9 @@ export async function insertOrder(event: H3Event, values: OrderInsertValues) {
       status: 'awaiting_confirmation',
       confirmation_deadline,
       subtotal_amount,
-      platform_fee_rate_snapshot: PLATFORM_FEE_RATE,
+      platform_fee_rate_snapshot: config.platform_fee_rate,
       platform_fee_amount,
-      commission_rate_snapshot: COMMISSION_RATE,
+      commission_rate_snapshot: config.commission_rate,
       channel_fee_amount: 0,
       total_amount,
     }).select('id').single()
